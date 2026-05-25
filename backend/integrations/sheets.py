@@ -48,6 +48,11 @@ FB_HEADERS = [
 ]
 
 
+def _on_render() -> bool:
+    """True when running on Render.com (browser OAuth not possible)."""
+    return bool(os.environ.get("RENDER") or os.environ.get("GOOGLE_TOKEN"))
+
+
 class SheetsClient:
 
     def __init__(self):
@@ -55,6 +60,18 @@ class SheetsClient:
         self._auth_status = "unauthenticated"
         self._auth_error  = ""
         self._lock        = threading.Lock()
+        # Auto-load from GOOGLE_TOKEN env var at startup (Render / production)
+        if os.environ.get("GOOGLE_TOKEN") and not TOKEN_FILE.exists():
+            try:
+                creds = self._load_creds()
+                if creds:
+                    self._auth_status = "ready"
+                else:
+                    self._auth_status = "error"
+                    self._auth_error  = "GOOGLE_TOKEN is set but could not be loaded — check the JSON format in Render env vars."
+            except Exception as e:
+                self._auth_status = "error"
+                self._auth_error  = f"GOOGLE_TOKEN load failed: {e}"
 
     # ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -98,9 +115,18 @@ class SheetsClient:
                 return {"status": "authenticating", "message": "Auth already in progress."}
             if self.auth_status == "ready":
                 return {"status": "ready", "message": "Already authenticated."}
+            # On Render/production the browser OAuth flow is not possible
+            if _on_render():
+                return {
+                    "status": "error",
+                    "message": (
+                        "Running on Render — browser sign-in is not supported on the server. "
+                        "Set GOOGLE_TOKEN and GOOGLE_CLIENT_SECRET in Render → Environment."
+                    ),
+                }
             has_secret = SECRET_FILE.exists() or os.environ.get("GOOGLE_CLIENT_SECRET")
             if not has_secret:
-                return {"status": "error", "message": "client_secret.json not found and GOOGLE_CLIENT_SECRET env var not set."}
+                return {"status": "error", "message": "client_secret.json not found in credentials/."}
             if TOKEN_FILE.exists():
                 TOKEN_FILE.unlink()
             self._auth_status = "authenticating"

@@ -782,7 +782,7 @@ def sheets_status():
     """Return auth status and spreadsheet info."""
     status = sheets_client.auth_status
     info   = sheets_client.get_spreadsheet_info() if status == "ready" else {}
-    return {"auth_status": status, **info}
+    return {"auth_status": status, "auth_error": sheets_client._auth_error, **info}
 
 
 @app.post("/api/sheets/auth")
