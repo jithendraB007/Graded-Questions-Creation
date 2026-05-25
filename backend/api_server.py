@@ -433,10 +433,13 @@ def generate(req: GenerateRequest):
     questions = _parse_questions(raw, bloom_targets=targets)
 
     # ── Dedup: remove near-duplicates within the new batch ───────────────────
+    # Use Jaccard-only at 0.85 (NOT 4-gram) — 4-gram triggers false positives
+    # when all questions share the same instruction template (e.g. "Rearrange
+    # the following sentences" or "Fill in the blanks").
     if len(questions) > 1:
         unique: list[Question] = [questions[0]]
         for q in questions[1:]:
-            if not _is_near_dup(q.question, [u.question for u in unique]):
+            if not any(_jaccard(q.question, u.question) >= 0.85 for u in unique):
                 unique.append(q)
         questions = unique
 

@@ -366,7 +366,7 @@ YOUR TASK
 Generate EXACTLY {count} new {question_type} question(s) — {marks} mark(s) each.
 
 CRITICAL: You MUST output ALL {count} questions numbered QUESTION 1 through QUESTION {count}.
-Do NOT stop after generating 1 or 2 questions. Every single question block is required.
+Do NOT stop early — every question block is required.
 
 Parameters:
   - Difficulty     : {difficulty}
