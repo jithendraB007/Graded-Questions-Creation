@@ -323,19 +323,12 @@ export default function App() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1">Question Types</span>
                 {ALL_TYPES.map(t => (
                   <button key={t} onClick={() => toggleQType(t)}
-                    className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors flex items-center gap-1 ${
+                    className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
                       qTypes.has(t)
                         ? 'bg-indigo-700 text-white border-indigo-700 shadow-sm'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-700'
                     }`}>
                     {t}
-                    {QUESTION_MARKS[t] && (
-                      <span className={`text-[9px] font-bold rounded px-1 ${
-                        qTypes.has(t) ? 'bg-indigo-600 text-indigo-200' : 'bg-gray-100 text-gray-400'
-                      }`}>
-                        {QUESTION_MARKS[t]}M
-                      </span>
-                    )}
                   </button>
                 ))}
               </div>

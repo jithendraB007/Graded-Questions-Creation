@@ -503,11 +503,6 @@ function PoolQuestion({ index, question, onRemove, onUpdate, onApprove, onReject
                 {qTypeDisp}
               </span>
             )}
-            {question._marks && (
-              <span className="text-[9px] bg-indigo-50 text-indigo-600 border border-indigo-100 rounded px-1.5 py-px font-semibold">
-                {question._marks}M
-              </span>
-            )}
             <span className={`text-[10px] font-bold border rounded px-1.5 py-px ${DIFF_PILL[question._difficulty] || 'bg-gray-100 text-gray-500 border-gray-200'}`}>
               {question._difficulty}
             </span>
