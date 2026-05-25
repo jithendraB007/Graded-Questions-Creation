@@ -172,11 +172,21 @@ class SheetsClient:
                 return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
             except Exception:
                 pass
+        # Fall back to env var (Render/production — config file not on server)
+        sid = os.environ.get("GOOGLE_SPREADSHEET_ID", "")
+        if sid:
+            return {
+                "spreadsheet_id":  sid,
+                "spreadsheet_url": f"https://docs.google.com/spreadsheets/d/{sid}/edit",
+            }
         return {}
 
     def _save_cfg(self, d):
-        CREDS_DIR.mkdir(parents=True, exist_ok=True)
-        CONFIG_FILE.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
+        try:
+            CREDS_DIR.mkdir(parents=True, exist_ok=True)
+            CONFIG_FILE.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass  # read-only filesystem on Render — ID already comes from env var
 
     def get_spreadsheet_info(self):
         cfg = self._cfg()
