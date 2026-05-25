@@ -5,7 +5,34 @@ import SyllabusPanel from './components/SyllabusPanel.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import { fetchStructure, fetchHealth, downloadExcel, fetchSyllabus } from './api/client.js'
 
+// Marks per question type — used as badge in UI and passed to generation prompt
+export const QUESTION_MARKS = {
+  // Grammar & Vocabulary — 2 marks
+  'Fill in the Blanks':        2,
+  'Cloze':                     2,
+  'Error Correction':          2,
+  'Sentence Arrangement':      2,
+  'Jumbled Sentences':         2,
+  'Jumbled Words':             2,
+  'Sentence Conversion':       2,
+  'Sentence Correction / MCQ': 2,
+  // Reading
+  'Higher-order Comprehension':          2,
+  'Literal & Inferential Comprehension': 5,
+  'Choice-based Comprehension':          7,
+  // Writing
+  'Short Functional Writing': 3,
+  'Essay Writing':            5,
+  'Story Writing':            5,
+  'Process Writing':          7,
+  'Email Writing':            8,
+  'Notice Writing':           8,
+  'Report Writing':           8,
+  'Paragraph Writing':        14,
+}
+
 const ALL_TYPES = [
+  // Grammar & Vocabulary
   'Fill in the Blanks',
   'Cloze',
   'Error Correction',
@@ -14,6 +41,19 @@ const ALL_TYPES = [
   'Jumbled Words',
   'Sentence Conversion',
   'Sentence Correction / MCQ',
+  // Reading
+  'Higher-order Comprehension',
+  'Literal & Inferential Comprehension',
+  'Choice-based Comprehension',
+  // Writing
+  'Short Functional Writing',
+  'Essay Writing',
+  'Story Writing',
+  'Process Writing',
+  'Email Writing',
+  'Notice Writing',
+  'Report Writing',
+  'Paragraph Writing',
 ]
 
 function coFromModule(moduleId, syllabus) {
@@ -283,12 +323,19 @@ export default function App() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0 mr-1">Question Types</span>
                 {ALL_TYPES.map(t => (
                   <button key={t} onClick={() => toggleQType(t)}
-                    className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
+                    className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors flex items-center gap-1 ${
                       qTypes.has(t)
                         ? 'bg-indigo-700 text-white border-indigo-700 shadow-sm'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300 hover:text-indigo-700'
                     }`}>
                     {t}
+                    {QUESTION_MARKS[t] && (
+                      <span className={`text-[9px] font-bold rounded px-1 ${
+                        qTypes.has(t) ? 'bg-indigo-600 text-indigo-200' : 'bg-gray-100 text-gray-400'
+                      }`}>
+                        {QUESTION_MARKS[t]}M
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -314,6 +361,7 @@ export default function App() {
             setPool={setPool}
             apiKeyReady={apiKeyReady}
             moduleTopics={module?.topics || []}
+            questionMarks={QUESTION_MARKS}
           />
         )}
       </main>

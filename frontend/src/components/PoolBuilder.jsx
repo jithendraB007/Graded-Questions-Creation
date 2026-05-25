@@ -50,7 +50,7 @@ function defaultTypeSettings() {
 
 export default function PoolBuilder({
   selection, selectedTopics, selectedQTypes, co,
-  pool, setPool, apiKeyReady, moduleTopics = [],
+  pool, setPool, apiKeyReady, moduleTopics = [], questionMarks = {},
 }) {
   // Per question-type settings: { [qType]: { Easy: {...}, Medium: {...}, Hard: {...} } }
   const [typeSettings, setTypeSettings] = useState(() => {
@@ -137,6 +137,7 @@ export default function PoolBuilder({
           question_type:      qType,
           count:              s.count,
           difficulty:         diff,
+          marks:              questionMarks[qType] || 2,
           bloom:              '',
           course_outcome:     co,
           model:              'anthropic/claude-sonnet-4-5',
@@ -148,6 +149,7 @@ export default function PoolBuilder({
           _type:       qType,
           _difficulty: diff,
           _bloom:      q.bloom || BLOOM_FALLBACK[diff],
+          _marks:      questionMarks[qType] || null,
           _meta:       data.meta,
           _status:     'pending',
           _feedback:   '',
@@ -255,7 +257,14 @@ export default function PoolBuilder({
             {/* Card header */}
             <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-gray-100">
               <div>
-                <p className="text-sm font-semibold text-gray-800">{qType}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-gray-800">{qType}</p>
+                  {questionMarks[qType] && (
+                    <span className="text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-full px-2 py-px">
+                      {questionMarks[qType]} marks
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-gray-400 mt-px">
                   {topicLabel}
                   {co && <> · <span className="text-blue-500 font-medium">{co}</span></>}
@@ -492,6 +501,11 @@ function PoolQuestion({ index, question, onRemove, onUpdate, onApprove, onReject
             {qTypeDisp && (
               <span className="text-[9px] bg-slate-50 text-slate-500 border border-slate-100 rounded px-1.5 py-px font-semibold max-w-[120px] truncate">
                 {qTypeDisp}
+              </span>
+            )}
+            {question._marks && (
+              <span className="text-[9px] bg-indigo-50 text-indigo-600 border border-indigo-100 rounded px-1.5 py-px font-semibold">
+                {question._marks}M
               </span>
             )}
             <span className={`text-[10px] font-bold border rounded px-1.5 py-px ${DIFF_PILL[question._difficulty] || 'bg-gray-100 text-gray-500 border-gray-200'}`}>

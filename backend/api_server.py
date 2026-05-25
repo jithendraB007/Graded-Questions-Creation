@@ -93,6 +93,7 @@ class GenerateRequest(BaseModel):
     skill: str = ""
     count: int = 5
     difficulty: str = "Medium"
+    marks: int = 2                     # marks per question — included in prompt
     bloom: str = ""                   # empty = auto-derive from difficulty via BLOOM_MAP
     course_outcome: str = ""
     model: str = "anthropic/claude-sonnet-4-5"
@@ -407,6 +408,7 @@ def generate(req: GenerateRequest):
         samples=samples,
         existing_questions=req.existing_questions or None,
         bloom_targets=targets,
+        marks=req.marks,
     )
 
     client = OpenAI(
@@ -416,7 +418,7 @@ def generate(req: GenerateRequest):
     try:
         resp = client.chat.completions.create(
             model=req.model,
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as e:
@@ -629,7 +631,7 @@ def generate_module(req: GenerateModuleRequest):
         try:
             resp = client.chat.completions.create(
                 model=req.model,
-                max_tokens=4096,
+                max_tokens=8192,
                 messages=[{"role": "user", "content": prompt}],
             )
         except Exception as e:
@@ -905,7 +907,7 @@ async def upload_syllabus(
     try:
         resp = client.chat.completions.create(
             model="anthropic/claude-sonnet-4-5",
-            max_tokens=4096,
+            max_tokens=8192,
             messages=[{"role": "user", "content": prompt}],
         )
     except Exception as e:

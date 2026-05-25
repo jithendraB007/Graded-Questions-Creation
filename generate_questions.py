@@ -31,6 +31,7 @@ ROOT = Path(__file__).parent
 EVALS_DIR = ROOT / "evals"
 
 FOLDER_MAP = {
+    # Grammar & Vocabulary
     "Cloze":                    "cloze",
     "Fill in the Blanks":       "fill_in_the_blanks",
     "Error Correction":         "error_correction",
@@ -39,6 +40,19 @@ FOLDER_MAP = {
     "Sentence Conversion":      "sentence_conversion",
     "Sentence Correction / MCQ":"sentence_correction_mcq",
     "Jumbled Words":            "jumbled_words",
+    # Reading
+    "Higher-order Comprehension":          "reading_higher_order",
+    "Literal & Inferential Comprehension": "reading_literal_inferential",
+    "Choice-based Comprehension":          "reading_choice_based",
+    # Writing
+    "Short Functional Writing": "writing_short_functional",
+    "Essay Writing":            "writing_essay",
+    "Story Writing":            "writing_story",
+    "Process Writing":          "writing_process",
+    "Email Writing":            "writing_email",
+    "Notice Writing":           "writing_notice",
+    "Report Writing":           "writing_report",
+    "Paragraph Writing":        "writing_paragraph",
 }
 
 # CO → fraction of questions targeting the HIGHER K-level within the difficulty band.
@@ -148,6 +162,94 @@ The solution must list the correctly rearranged sentence, all nouns, and the mai
 The explanation must justify each noun (naming function) and the main verb (action function)
 using clear grammatical reasoning.
 """,
+
+    # ── Reading comprehension types ───────────────────────────────────────────
+
+    "Higher-order Comprehension": """
+Each question must test higher-order comprehension skills: analysis, application, inference,
+or critical opinion. Questions require thinking beyond the text — there is no single
+factually-lookable answer; students must reason and interpret.
+The question must be answerable using the reading material as a basis.
+Provide a model answer demonstrating analytical thinking (2–3 sentences).
+This question type is worth 2 marks.
+""",
+
+    "Literal & Inferential Comprehension": """
+Each question must test both literal comprehension (facts stated directly in the text) and
+inferential comprehension (meaning implied by the text).
+The question must clearly refer to or be answerable from the reading passage.
+Provide a detailed model answer covering 4–5 key points expected for full marks.
+This question type is worth 5 marks.
+""",
+
+    "Choice-based Comprehension": """
+Each question must offer a CHOICE: the student answers ONE question from two options (a) or (b).
+Both (a) and (b) must test comprehension of the reading passage from different angles.
+Provide detailed model answers for BOTH options (a) and (b) — each a full paragraph.
+This question type is worth 7 marks.
+""",
+
+    # ── Writing types ─────────────────────────────────────────────────────────
+
+    "Short Functional Writing": """
+Each question must ask the student to produce a short functional piece of writing:
+a brief notice, a short message, an informal note, or a short description (3–5 sentences).
+Provide a complete model answer demonstrating the key functional elements.
+This question type is worth 3 marks.
+""",
+
+    "Essay Writing": """
+Each question must ask the student to write a short essay (approximately 150–200 words) on a
+topic drawn from the themes or content of the reading material.
+Provide a model essay outline or a brief model essay as the solution.
+This question type is worth 5 marks.
+""",
+
+    "Story Writing": """
+Each question must provide a story opening (2–3 sentences) or a story outline (3–4 bullet points)
+and ask the student to complete or write the story (approximately 100–150 words).
+The story context must relate to reading material themes.
+Provide a complete model story completion as the solution.
+This question type is worth 5 marks.
+""",
+
+    "Process Writing": """
+Each question must ask the student to explain a process or describe a sequence of steps clearly
+(e.g. how to do something, how something works, how something is produced).
+The process must be related to the reading material content.
+Provide a model answer with clear, numbered sequential steps.
+This question type is worth 7 marks.
+""",
+
+    "Email Writing": """
+Each question must present a workplace or real-life scenario requiring the student to write
+a formal or semi-formal email.
+Specify clearly: who the email is to, who it is from, and the purpose.
+The model answer MUST include: Subject line, Salutation, Body (2–3 paragraphs), Closing, Sender name.
+This question type is worth 8 marks.
+""",
+
+    "Notice Writing": """
+Each question must present a scenario requiring the student to write a formal notice.
+The notice MUST include: Heading (NOTICE), Date, Target audience, Body content, Name and Designation.
+Provide a complete model notice as the solution.
+This question type is worth 8 marks.
+""",
+
+    "Report Writing": """
+Each question must present a workplace scenario requiring the student to write a formal work report.
+The report MUST include: Title, Date, To/From, Introduction, Findings/Body, Conclusion, Writer's name.
+Provide a complete model report as the solution.
+This question type is worth 8 marks.
+""",
+
+    "Paragraph Writing": """
+Each question must present a CHOICE of two topics for paragraph writing (a) or (b).
+The student writes ONE well-developed paragraph (approximately 200–250 words) on their chosen topic.
+Both topics must relate to themes or content from the reading material.
+Provide a complete model paragraph for BOTH options (a) and (b).
+This question type is worth 14 marks — the paragraph must be substantive and well-organised.
+""",
 }
 
 
@@ -193,7 +295,8 @@ def build_prompt(material: str, question_type: str, count: int,
                  bloom: str, difficulty: str, course_outcome: str,
                  samples: list[dict],
                  existing_questions: list[str] | None = None,
-                 bloom_targets: list[str] | None = None) -> str:
+                 bloom_targets: list[str] | None = None,
+                 marks: int = 2) -> str:
 
     type_rules = TYPE_PROMPTS.get(question_type, "")
     sample_text = format_samples(samples)
@@ -260,10 +363,14 @@ SAMPLE QUESTIONS (follow this format exactly)
 ══════════════════════════════════════════════
 YOUR TASK
 ══════════════════════════════════════════════
-Generate {count} new {question_type} question(s).
+Generate EXACTLY {count} new {question_type} question(s) — {marks} mark(s) each.
+
+CRITICAL: You MUST output ALL {count} questions numbered QUESTION 1 through QUESTION {count}.
+Do NOT stop after generating 1 or 2 questions. Every single question block is required.
 
 Parameters:
   - Difficulty     : {difficulty}
+  - Marks          : {marks}
   - Course Outcome : {course_outcome}
 
 {bloom_section}
