@@ -9,12 +9,13 @@ function computeMetrics({ approved = 0, rejected = 0, pending = 0 }) {
   const FP = 0          // human reviewer is ground truth — no false rejections
   const FN = pending    // unchecked questions; potential missed issues
   const TN = approved   // correctly passed good questions
+  const reviewed  = approved + rejected
   const precision = (TP + FP) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FP)) * 100
   const recall    = (TP + FN) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FN)) * 100
   const p = precision / 100, r = recall / 100
-  const f1        = (p + r) === 0 ? 0 : (2 * p * r) / (p + r)
-  const accuracy  = total === 0 ? 0 : ((TP + TN) / total) * 100
-  return { TP, FP, FN, TN, total, approved, rejected, pending, precision, recall, f1, accuracy }
+  const f1            = (p + r) === 0 ? 0 : (2 * p * r) / (p + r)
+  const approvalRate  = reviewed === 0 ? (total > 0 ? 100 : 0) : (TN / reviewed) * 100
+  return { TP, FP, FN, TN, total, approved, rejected, pending, reviewed, precision, recall, f1, approvalRate }
 }
 
 function ratingFor(value, goodThresh, fairThresh) {
@@ -295,10 +296,10 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
 
   const hasData = metrics.total > 0
 
-  const precisionRating = ratingFor(metrics.precision, 90, 70)
-  const recallRating    = ratingFor(metrics.recall,    80, 60)
-  const f1Rating        = ratingFor(metrics.f1 * 100,  80, 65)
-  const accuracyRating  = ratingFor(metrics.accuracy,  85, 70)
+  const precisionRating    = ratingFor(metrics.precision,   90, 70)
+  const recallRating       = ratingFor(metrics.recall,      80, 60)
+  const f1Rating           = ratingFor(metrics.f1 * 100,    80, 65)
+  const approvalRateRating = ratingFor(metrics.approvalRate, 80, 60)
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-50">
@@ -451,11 +452,13 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
             {/* Dashboard sub-header */}
             <div>
               <p className="text-xs text-gray-500 leading-relaxed">
-                Across <span className="font-bold text-gray-700">{metrics.total}</span> questions
-                {metrics.approved + metrics.rejected > 0 && (
-                  <> ({metrics.approved + metrics.rejected} reviewed)</>
+                <span className="font-bold text-gray-700">{metrics.total}</span> questions total
+                {metrics.reviewed > 0 && (
+                  <> — <span className="font-bold text-gray-700">{metrics.reviewed}</span> reviewed
+                  ({metrics.approved} approved, {metrics.rejected} rejected),{' '}
+                  <span className="font-bold text-amber-600">{metrics.pending}</span> pending review
+                </>
                 )}
-                {' '}— how well is the AI content reviewer doing?
               </p>
             </div>
 
@@ -485,10 +488,10 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
                 />
                 <MetricCard
                   icon="✅"
-                  label="Accuracy"
-                  displayValue={`${metrics.accuracy.toFixed(1)}%`}
-                  rating={accuracyRating}
-                  description={`${metrics.TP + metrics.TN} of ${metrics.total} questions handled correctly`}
+                  label="Approval Rate"
+                  displayValue={`${metrics.approvalRate.toFixed(1)}%`}
+                  rating={approvalRateRating}
+                  description={`${metrics.TN} approved of ${metrics.reviewed} reviewed questions`}
                 />
               </div>
             </Section>
