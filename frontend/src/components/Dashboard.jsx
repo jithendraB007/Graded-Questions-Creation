@@ -12,7 +12,7 @@ function computeMetrics({ approved = 0, rejected = 0, pending = 0 }) {
   return { total, approved, rejected, pending, reviewed, approvalRate, rejectionRate, reviewCoverage }
 }
 
-function getInsights({ approvalRate, reviewCoverage, total, reviewed, rejected, pending }) {
+function getInsights({ approvalRate, reviewCoverage, total, reviewed, approved, rejected, pending }) {
   const out = []
   if (total === 0) {
     out.push({ type: 'info', title: 'No questions yet', body: 'Generate questions to see quality metrics here.' })
