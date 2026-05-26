@@ -4,40 +4,32 @@ import { sheetsStatus, sheetsAuth, sheetsLog, sheetsDashboard } from '../api/cli
 // ── analytics helpers ─────────────────────────────────────────────────────────
 
 function computeMetrics({ approved = 0, rejected = 0, pending = 0 }) {
-  const total        = approved + rejected + pending
-  const reviewed     = approved + rejected
-  const approvalRate    = reviewed === 0 ? null : (approved  / reviewed) * 100
-  const rejectionRate   = reviewed === 0 ? null : (rejected  / reviewed) * 100
-  const reviewCoverage  = total    === 0 ? 0    : (reviewed  / total)    * 100
-  return { total, approved, rejected, pending, reviewed, approvalRate, rejectionRate, reviewCoverage }
+  const total = approved + rejected + pending
+  const TP = rejected   // correctly flagged bad questions
+  const FP = 0          // human reviewer is ground truth — no false rejections
+  const FN = pending    // unchecked questions; potential missed issues
+  const TN = approved   // correctly passed good questions
+  const precision = (TP + FP) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FP)) * 100
+  const recall    = (TP + FN) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FN)) * 100
+  const p = precision / 100, r = recall / 100
+  const f1        = (p + r) === 0 ? 0 : (2 * p * r) / (p + r)
+  const accuracy  = total === 0 ? 0 : ((TP + TN) / total) * 100
+  return { TP, FP, FN, TN, total, approved, rejected, pending, precision, recall, f1, accuracy }
 }
 
-function getInsights({ approvalRate, reviewCoverage, total, reviewed, approved, rejected, pending }) {
-  const out = []
-  if (total === 0) {
-    out.push({ type: 'info', title: 'No questions yet', body: 'Generate questions to see quality metrics here.' })
-    return out
-  }
-  if (reviewCoverage < 30) {
-    out.push({ type: 'warning', title: `Low review coverage (${reviewCoverage.toFixed(0)}%)`, body: `Only ${reviewed} of ${total} questions reviewed. Review more to get meaningful quality data.` })
-  } else if (reviewCoverage >= 80) {
-    out.push({ type: 'success', title: `High coverage (${reviewCoverage.toFixed(0)}%)`, body: `${reviewed} of ${total} questions have been reviewed.` })
-  } else {
-    out.push({ type: 'info', title: `Review coverage (${reviewCoverage.toFixed(0)}%)`, body: `${pending} question${pending !== 1 ? 's' : ''} still pending review.` })
-  }
-  if (reviewed > 0 && approvalRate !== null) {
-    if (approvalRate >= 80) {
-      out.push({ type: 'success', title: `Strong approval rate (${approvalRate.toFixed(1)}%)`, body: `${approved} of ${reviewed} reviewed questions approved — generation quality is high.` })
-    } else if (approvalRate >= 50) {
-      out.push({ type: 'info', title: `Moderate approval rate (${approvalRate.toFixed(1)}%)`, body: `${rejected} question${rejected !== 1 ? 's' : ''} rejected. Consider refining the generation prompts.` })
-    } else {
-      out.push({ type: 'warning', title: `Low approval rate (${approvalRate.toFixed(1)}%)`, body: `${rejected} of ${reviewed} reviewed questions were rejected. Generation quality needs improvement.` })
-    }
-  }
-  return out.slice(0, 3)
+function ratingFor(value, goodThresh, fairThresh) {
+  if (value >= goodThresh) return 'Good'
+  if (value >= fairThresh) return 'Fair'
+  return 'Poor'
 }
 
-// ── shared sub-components ─────────────────────────────────────────────────────
+const RATING_STYLES = {
+  Good: 'bg-emerald-100 text-emerald-800',
+  Fair: 'bg-amber-100 text-amber-800',
+  Poor: 'bg-red-100 text-red-700',
+}
+
+// ── sub-components ────────────────────────────────────────────────────────────
 
 function Section({ title, children }) {
   return (
@@ -48,12 +40,27 @@ function Section({ title, children }) {
   )
 }
 
-function MetricCard({ label, value, sub, accent }) {
+function RatingBadge({ rating }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-xl px-4 py-3.5 flex flex-col gap-0.5 shadow-sm">
-      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{label}</p>
-      <p className={`text-3xl font-bold tabular-nums leading-tight ${accent}`}>{value}</p>
-      {sub && <p className="text-[10px] text-gray-400 leading-tight">{sub}</p>}
+    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${RATING_STYLES[rating] || RATING_STYLES.Poor}`}>
+      {rating}
+    </span>
+  )
+}
+
+function MetricCard({ icon, label, displayValue, description, rating }) {
+  const accent = rating === 'Good' ? 'text-emerald-600' : rating === 'Fair' ? 'text-amber-500' : 'text-red-500'
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col gap-2.5">
+      <div className="flex items-start justify-between">
+        <span className="text-lg">{icon}</span>
+        <RatingBadge rating={rating} />
+      </div>
+      <div>
+        <p className={`text-3xl font-bold tabular-nums leading-tight ${accent}`}>{displayValue}</p>
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">{label}</p>
+      </div>
+      {description && <p className="text-[10px] text-gray-500 leading-relaxed">{description}</p>}
     </div>
   )
 }
@@ -71,22 +78,81 @@ function OutcomeBar({ label, value, total, barClass }) {
   )
 }
 
-
-const INSIGHT_STYLES = {
-  success: { wrap: 'bg-emerald-50 border-emerald-200', icon: '○', iconClass: 'text-emerald-600', titleClass: 'text-emerald-800', bodyClass: 'text-emerald-700' },
-  warning: { wrap: 'bg-amber-50  border-amber-200',   icon: '△', iconClass: 'text-amber-600',   titleClass: 'text-amber-800',   bodyClass: 'text-amber-700'   },
-  info:    { wrap: 'bg-blue-50   border-blue-200',    icon: 'ℹ', iconClass: 'text-blue-500',    titleClass: 'text-blue-800',    bodyClass: 'text-blue-700'    },
+function StackedOutcomeBar({ TP, FP, FN, TN, total }) {
+  if (total === 0) return null
+  const pct = v => ((v / total) * 100).toFixed(1)
+  const segments = [
+    { value: TN, color: 'bg-emerald-400', label: 'Correct Approvals' },
+    { value: TP, color: 'bg-blue-500',    label: 'Correctly Flagged'  },
+    { value: FN, color: 'bg-amber-400',   label: 'Missed Issues'      },
+    { value: FP, color: 'bg-red-400',     label: 'False Flags'        },
+  ]
+  return (
+    <div className="space-y-3">
+      <div className="flex h-8 rounded-lg overflow-hidden w-full">
+        {segments.map(({ value, color, label }) =>
+          value > 0
+            ? <div key={label} className={`${color} transition-all duration-500`} style={{ width: `${pct(value)}%` }} title={`${label}: ${value}`} />
+            : null
+        )}
+      </div>
+      <div className="flex flex-wrap gap-x-5 gap-y-1.5">
+        {segments.map(({ color, label, value }) => (
+          <div key={label} className="flex items-center gap-1.5 text-[11px] text-gray-600">
+            <span className={`w-2.5 h-2.5 rounded-sm ${color} shrink-0`} />
+            <span className="font-bold tabular-nums">{value}</span>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
 }
 
-function InsightCard({ insight }) {
-  const s = INSIGHT_STYLES[insight.type] || INSIGHT_STYLES.info
+function ConfusionMatrix({ TP, FP, FN, TN }) {
   return (
-    <div className={`flex items-start gap-3 px-4 py-3 rounded-xl border ${s.wrap}`}>
-      <span className={`text-xs font-bold mt-px shrink-0 ${s.iconClass}`}>{s.icon}</span>
-      <p className={`text-xs leading-relaxed ${s.bodyClass}`}>
-        <span className={`font-bold ${s.titleClass}`}>{insight.title}</span>
-        {insight.body ? <> — {insight.body}</> : null}
-      </p>
+    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+      {/* Column headers */}
+      <div className="flex mb-2 pl-32">
+        <span className="flex-1 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Human: Problem</span>
+        <span className="flex-1 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Human: Clean</span>
+      </div>
+      {/* Row: AI Said Problem */}
+      <div className="flex items-stretch gap-2 mb-2">
+        <div className="w-32 shrink-0 flex items-center">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-snug">AI Said: Problem</span>
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-2">
+          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-emerald-50 border border-emerald-200 text-center">
+            <p className="text-2xl font-bold tabular-nums text-emerald-700">{TP}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 mt-1">True Positive</p>
+            <p className="text-[9px] text-emerald-500 mt-0.5">Correctly Flagged</p>
+          </div>
+          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-red-50 border border-red-200 text-center opacity-80">
+            <p className="text-2xl font-bold tabular-nums text-red-600">{FP}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wide text-red-500 mt-1">False Positive</p>
+            <p className="text-[9px] text-red-400 mt-0.5">False Flags</p>
+          </div>
+        </div>
+      </div>
+      {/* Row: AI Said Clean */}
+      <div className="flex items-stretch gap-2">
+        <div className="w-32 shrink-0 flex items-center">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-snug">AI Said: Clean</span>
+        </div>
+        <div className="flex-1 grid grid-cols-2 gap-2">
+          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-amber-50 border border-amber-200 text-center">
+            <p className="text-2xl font-bold tabular-nums text-amber-700">{FN}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wide text-amber-600 mt-1">False Negative</p>
+            <p className="text-[9px] text-amber-500 mt-0.5">Missed Issues</p>
+          </div>
+          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-emerald-50 border border-emerald-200 text-center">
+            <p className="text-2xl font-bold tabular-nums text-emerald-700">{TN}</p>
+            <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 mt-1">True Negative</p>
+            <p className="text-[9px] text-emerald-500 mt-0.5">Correct Approvals</p>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -94,17 +160,17 @@ function InsightCard({ insight }) {
 // ── main component ────────────────────────────────────────────────────────────
 
 export default function Dashboard({ pool = [], co = '', onClose }) {
-  const [authStatus,    setAuthStatus]    = useState('loading')
-  const [authError,     setAuthError]     = useState('')
-  const [sheetUrl,      setSheetUrl]      = useState('')
-  const [stats,         setStats]         = useState(null)
-  const [logging,       setLogging]       = useState(false)
-  const [logResult,     setLogResult]     = useState('')
-  const [loadingStats,  setLoadingStats]  = useState(false)
-  const [authMsg,       setAuthMsg]       = useState('')
-  const [pollTimer,     setPollTimer]     = useState(null)
-  const [tokenJson,     setTokenJson]     = useState('')
-  const [tokenCopied,   setTokenCopied]   = useState(false)
+  const [authStatus,   setAuthStatus]   = useState('loading')
+  const [authError,    setAuthError]    = useState('')
+  const [sheetUrl,     setSheetUrl]     = useState('')
+  const [stats,        setStats]        = useState(null)
+  const [logging,      setLogging]      = useState(false)
+  const [logResult,    setLogResult]    = useState('')
+  const [loadingStats, setLoadingStats] = useState(false)
+  const [authMsg,      setAuthMsg]      = useState('')
+  const [pollTimer,    setPollTimer]    = useState(null)
+  const [tokenJson,    setTokenJson]    = useState('')
+  const [tokenCopied,  setTokenCopied]  = useState(false)
 
   const loadStatus = useCallback(async () => {
     try {
@@ -112,7 +178,6 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
       setAuthStatus(data.auth_status)
       setAuthError(data.auth_error || '')
       setSheetUrl(data.spreadsheet_url || '')
-      // Fetch stats on first load OR if a previous fetch errored out
       if (data.auth_status === 'ready' && (!stats || stats.error)) fetchStats()
     } catch (e) { setAuthStatus('error'); setAuthError(e.message) }
   }, [stats]) // eslint-disable-line
@@ -184,7 +249,7 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
     finally { setLogging(false) }
   }
 
-  // ── derive counts ───────────────────────────────────────────────────────────
+  // ── derive counts ────────────────────────────────────────────────────────────
   const poolCounts = useMemo(() => ({
     approved: pool.filter(q => q._status === 'approved').length,
     rejected: pool.filter(q => q._status === 'rejected').length,
@@ -202,27 +267,32 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
     return poolCounts
   }, [stats, poolCounts])
 
-  const metrics  = useMemo(() => computeMetrics(activeCounts), [activeCounts])
-  const insights = useMemo(() => getInsights(metrics), [metrics])
+  const metrics = useMemo(() => computeMetrics(activeCounts), [activeCounts])
 
   const sourceLabel = (stats && !stats.error && (stats.total || 0) > 0)
     ? 'All sessions (Google Sheets)'
     : 'Current pool'
+
   const hasData = metrics.total > 0
+
+  const precisionRating = ratingFor(metrics.precision, 90, 70)
+  const recallRating    = ratingFor(metrics.recall,    80, 60)
+  const f1Rating        = ratingFor(metrics.f1 * 100,  80, 65)
+  const accuracyRating  = ratingFor(metrics.accuracy,  85, 70)
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-50">
 
-      {/* ── Header ────────────────────────────────────────────────────────── */}
+      {/* ── Header ───────────────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between gap-4 shrink-0 shadow-sm">
-        <div className="flex items-center gap-3">
-          <h2 className="text-sm font-bold text-blue-900 uppercase tracking-widest">Question Generation Dashboard</h2>
-          <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 rounded-full px-2.5 py-0.5">
+        <div className="flex items-center gap-3 min-w-0">
+          <h2 className="text-sm font-bold text-blue-900 uppercase tracking-widest whitespace-nowrap">Agent Performance Dashboard</h2>
+          <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 rounded-full px-2.5 py-0.5 whitespace-nowrap">
             {sourceLabel}
           </span>
           {authStatus === 'ready' && sheetUrl && (
             <a href={sheetUrl} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 hover:bg-emerald-100 transition-colors">
+              className="flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1 hover:bg-emerald-100 transition-colors whitespace-nowrap">
               <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
               </svg>
@@ -230,7 +300,7 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
             </a>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {authStatus !== 'ready' && authStatus !== 'loading' && authStatus !== 'authenticating' && (
             <button onClick={handleAuth}
               className="flex items-center gap-2 text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white px-3 py-1.5 rounded-lg transition-colors">
@@ -278,6 +348,7 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
 
       <div className="flex-1 overflow-y-auto px-6 py-5">
 
+        {/* Notifications */}
         {authMsg && (
           <div className="max-w-5xl mx-auto mb-3 text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
             {authMsg}
@@ -298,7 +369,7 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
         {tokenJson && (
           <div className="max-w-5xl mx-auto mb-3 bg-gray-900 rounded-xl px-4 py-3 space-y-2">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-              Refreshed GOOGLE_TOKEN — paste this into Render → Environment → GOOGLE_TOKEN
+              Refreshed GOOGLE_TOKEN — paste into Render → Environment → GOOGLE_TOKEN
             </p>
             <pre className="text-[9px] text-green-300 whitespace-pre-wrap break-all leading-relaxed max-h-32 overflow-y-auto">
               {tokenJson}
@@ -308,13 +379,13 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
           </div>
         )}
 
-        {/* ── Empty state ─────────────────────────────────────────────────── */}
+        {/* ── Empty state ──────────────────────────────────────────────────────── */}
         {!hasData && (
           <div className="max-w-5xl mx-auto flex flex-col items-center justify-center py-20 text-center gap-3">
             <p className="text-4xl">📊</p>
             <p className="text-sm font-semibold text-gray-600">No data yet</p>
             <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
-              Generate and review questions in the main panel, or connect Google Sheets to see aggregate analytics across sessions.
+              Generate and review questions, or connect Google Sheets to see aggregate performance metrics.
             </p>
             {authStatus !== 'ready' && authStatus !== 'loading' && authStatus !== 'authenticating' && (
               <button onClick={handleAuth}
@@ -343,100 +414,81 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
           </div>
         )}
 
-        {/* ── Main analytics ──────────────────────────────────────────────── */}
+        {/* ── Main analytics ───────────────────────────────────────────────────── */}
         {hasData && (
-          <div className="max-w-5xl mx-auto space-y-5">
+          <div className="max-w-5xl mx-auto space-y-6">
 
-            {/* SUMMARY COUNTS */}
-            <Section title={`Question Pool — ${metrics.total} total`}>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <MetricCard
-                  label="Total Generated"
-                  value={metrics.total}
-                  sub={sourceLabel}
-                  accent="text-blue-700"
-                />
-                <MetricCard
-                  label="Approved"
-                  value={metrics.approved}
-                  sub={metrics.reviewed > 0 ? `${((metrics.approved / metrics.reviewed) * 100).toFixed(0)}% of reviewed` : 'none reviewed yet'}
-                  accent="text-emerald-600"
-                />
-                <MetricCard
-                  label="Rejected"
-                  value={metrics.rejected}
-                  sub={metrics.reviewed > 0 ? `${((metrics.rejected / metrics.reviewed) * 100).toFixed(0)}% of reviewed` : 'none reviewed yet'}
-                  accent="text-red-500"
-                />
-                <MetricCard
-                  label="Pending Review"
-                  value={metrics.pending}
-                  sub={metrics.total > 0 ? `${(100 - metrics.reviewCoverage).toFixed(0)}% unreviewed` : ''}
-                  accent="text-amber-500"
-                />
-              </div>
-            </Section>
-
-            {/* REVIEW PROGRESS + QUALITY */}
-            <div className="grid sm:grid-cols-2 gap-4">
-
-              {/* Status breakdown */}
-              <Section title="Review Breakdown">
-                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3.5">
-                  <OutcomeBar label="Approved"      value={metrics.approved} total={metrics.total} barClass="bg-emerald-400" />
-                  <OutcomeBar label="Rejected"      value={metrics.rejected} total={metrics.total} barClass="bg-red-400"     />
-                  <OutcomeBar label="Pending review" value={metrics.pending}  total={metrics.total} barClass="bg-amber-300"   />
-                </div>
-              </Section>
-
-              {/* Quality summary */}
-              <Section title="Quality Summary">
-                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500">Approval Rate</span>
-                      <span className="font-bold text-emerald-600">
-                        {metrics.approvalRate !== null ? `${metrics.approvalRate.toFixed(1)}%` : '—'}
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-400 rounded-full transition-all duration-500"
-                        style={{ width: `${metrics.approvalRate ?? 0}%` }} />
-                    </div>
-                    <p className="text-[10px] text-gray-400 mt-1">
-                      {metrics.reviewed > 0
-                        ? `${metrics.approved} approved of ${metrics.reviewed} reviewed`
-                        : 'No questions reviewed yet'}
-                    </p>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-gray-500">Review Coverage</span>
-                      <span className="font-bold text-blue-600">{metrics.reviewCoverage.toFixed(1)}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-400 rounded-full transition-all duration-500"
-                        style={{ width: `${metrics.reviewCoverage}%` }} />
-                    </div>
-                    <p className="text-[10px] text-gray-400 mt-1">
-                      {metrics.reviewed} of {metrics.total} questions reviewed
-                    </p>
-                  </div>
-                </div>
-              </Section>
+            {/* Dashboard sub-header */}
+            <div>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Across <span className="font-bold text-gray-700">{metrics.total}</span> questions
+                {metrics.approved + metrics.rejected > 0 && (
+                  <> ({metrics.approved + metrics.rejected} reviewed)</>
+                )}
+                {' '}— how well is the AI content reviewer doing?
+              </p>
             </div>
 
-            {/* INSIGHTS */}
-            <Section title="Insights">
-              <div className="space-y-2">
-                {insights.map((ins, i) => <InsightCard key={i} insight={ins} />)}
+            {/* ── 4 Metric Cards ────────────────────────────────────────────── */}
+            <Section title="AI Reviewer Performance Metrics">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <MetricCard
+                  icon="🎯"
+                  label="Precision"
+                  displayValue={`${metrics.precision.toFixed(1)}%`}
+                  rating={precisionRating}
+                  description={`${metrics.precision.toFixed(1)}% of flagged questions were actually bad`}
+                />
+                <MetricCard
+                  icon="🔍"
+                  label="Recall"
+                  displayValue={`${metrics.recall.toFixed(1)}%`}
+                  rating={recallRating}
+                  description={`${metrics.recall.toFixed(1)}% of actual bad questions were caught`}
+                />
+                <MetricCard
+                  icon="⚖️"
+                  label="F1 Score"
+                  displayValue={metrics.f1.toFixed(2)}
+                  rating={f1Rating}
+                  description="Harmonic mean of Precision and Recall"
+                />
+                <MetricCard
+                  icon="✅"
+                  label="Accuracy"
+                  displayValue={`${metrics.accuracy.toFixed(1)}%`}
+                  rating={accuracyRating}
+                  description={`${metrics.TP + metrics.TN} of ${metrics.total} questions handled correctly`}
+                />
               </div>
             </Section>
 
-            {/* ── Google Sheets aggregate data ────────────────────────────── */}
+            {/* ── Question Outcomes stacked bar ─────────────────────────────── */}
+            <Section title="Question Outcomes">
+              <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <StackedOutcomeBar
+                  TP={metrics.TP}
+                  FP={metrics.FP}
+                  FN={metrics.FN}
+                  TN={metrics.TN}
+                  total={metrics.total}
+                />
+              </div>
+            </Section>
+
+            {/* ── Confusion Matrix ──────────────────────────────────────────── */}
+            <Section title="Confusion Matrix">
+              <ConfusionMatrix
+                TP={metrics.TP}
+                FP={metrics.FP}
+                FN={metrics.FN}
+                TN={metrics.TN}
+              />
+            </Section>
+
+            {/* ── Google Sheets aggregate data ──────────────────────────────── */}
             {authStatus === 'ready' && stats && !stats.error && (stats.total || 0) > 0 && (
               <>
-                {/* Module progress */}
                 {Object.keys(stats.by_module || {}).length > 0 && (
                   <Section title="Module Progress">
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
@@ -469,7 +521,6 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
                   </Section>
                 )}
 
-                {/* By Question Type */}
                 {Object.keys(stats.by_type || {}).length > 0 && (
                   <Section title="By Question Type">
                     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-2.5">
@@ -480,7 +531,6 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
                   </Section>
                 )}
 
-                {/* By Difficulty */}
                 {Object.keys(stats.by_difficulty || {}).length > 0 && (
                   <Section title="By Difficulty">
                     <div className="grid grid-cols-3 gap-3">
