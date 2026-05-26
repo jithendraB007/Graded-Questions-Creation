@@ -150,6 +150,7 @@ export default function PoolBuilder({
           _difficulty: diff,
           _bloom:      q.bloom || BLOOM_FALLBACK[diff],
           _marks:      questionMarks[qType] || null,
+          _material:   data.meta.material_file || '',
           _meta:       data.meta,
           _status:     'pending',
           _feedback:   '',
@@ -444,10 +445,11 @@ function PoolQuestion({ index, question, onRemove, onUpdate, onApprove, onReject
   }
   function handleReject() { onReject(fbText); setRejecting(false); setFbText('') }
 
-  const bloomLabel = question._bloom || question.bloom || ''
-  const status     = question._status || 'pending'
-  const topicDisp  = question._meta?.topic_display || ''
-  const qTypeDisp  = question._type || ''
+  const bloomLabel    = question._bloom || question.bloom || ''
+  const status        = question._status || 'pending'
+  const topicDisp     = question._meta?.topic_display || ''
+  const qTypeDisp     = question._type || ''
+  const materialDisp  = question._material || ''
 
   const statusBg = status === 'approved' ? 'bg-emerald-50/40'
                  : status === 'rejected' ? 'bg-red-50/30'
@@ -501,6 +503,11 @@ function PoolQuestion({ index, question, onRemove, onUpdate, onApprove, onReject
             {qTypeDisp && (
               <span className="text-[9px] bg-slate-50 text-slate-500 border border-slate-100 rounded px-1.5 py-px font-semibold max-w-[120px] truncate">
                 {qTypeDisp}
+              </span>
+            )}
+            {materialDisp && (
+              <span className="text-[9px] bg-gray-50 text-gray-400 border border-gray-100 rounded px-1.5 py-px font-medium max-w-[180px] truncate" title={materialDisp}>
+                📄 {materialDisp.replace(/_/g, ' ').replace(/\.md$/, '')}
               </span>
             )}
             <span className={`text-[10px] font-bold border rounded px-1.5 py-px ${DIFF_PILL[question._difficulty] || 'bg-gray-100 text-gray-500 border-gray-200'}`}>

@@ -467,6 +467,7 @@ def generate(req: GenerateRequest):
         "bloom": bloom,
         "difficulty": req.difficulty,
         "course_outcome": req.course_outcome,
+        "material_file": mat.name,
     }
     return GenerateResponse(questions=questions, raw=raw, meta=meta, filtered_count=filtered_count)
 

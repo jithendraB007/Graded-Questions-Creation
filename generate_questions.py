@@ -101,10 +101,27 @@ def compute_bloom_targets(co: str, difficulty: str, count: int) -> list[str]:
 
 TYPE_PROMPTS = {
     "Cloze": """
-Each question must be a Cloze passage with EXACTLY 4 numbered blanks (i)–(iv).
-Each blank must offer TWO bracket options: one noun form and one verb form.
-Example format: (i)_________________ (analysis / analyze)
-The student selects the correct word from the two bracket options.
+Each question must be a single coherent paragraph of 5–7 sentences on ONE clear topic
+drawn from the reading material. The paragraph must flow logically from start to finish
+(introduction → development → conclusion) and read as natural English.
+
+Place EXACTLY 4 numbered blanks (i)–(iv) spread across DIFFERENT sentences in the paragraph
+(no two blanks in the same sentence). Each blank must replace a key content word — NOT a
+function word (no articles, prepositions, conjunctions, or pronouns).
+
+Each blank offers TWO bracket options: one noun form and one verb form derived from the
+SAME base word (i.e. morphological variants of a single root).
+  Correct example:  (i)_________________ (analysis / analyze)
+  Correct example:  (ii)________________ (production / produce)
+  Incorrect example: (analysis / conduct)  ← these are NOT from the same root
+
+Requirements for each blank:
+- The correct answer must fit naturally in the sentence — the sentence must be grammatically
+  correct and contextually clear with the right word inserted.
+- The distractor (wrong form) must be grammatically plausible in isolation but incorrect in
+  context, so students must understand whether a noun or verb is required in that position.
+- Both options must come from the SAME root word — no random pairings.
+- Do NOT put blanks in the title, heading, or first sentence alone.
 """,
 
     "Fill in the Blanks": """
@@ -282,7 +299,7 @@ def format_samples(samples: list[dict]) -> str:
     if not samples:
         return "No sample questions available for this type yet."
     lines = []
-    for i, s in enumerate(samples[:3], 1):
+    for i, s in enumerate(samples[:5], 1):
         lines.append(f"--- SAMPLE {i} ---")
         lines.append(f"Question:\n{s.get('question', '').strip()}")
         lines.append(f"\nSolution:\n{s.get('solution', '').strip()}")
