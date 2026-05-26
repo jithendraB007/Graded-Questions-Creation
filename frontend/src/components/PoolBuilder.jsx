@@ -131,58 +131,54 @@ export default function PoolBuilder({
 
     patchType(qType, diff, { loading: true, error: '', info: '' })
 
-    let totalFiltered = 0
-    for (const topicId of effectiveTopics) {
-      try {
-        const isManualBloom = s.bloom && s.bloom !== 'auto'
-        let bloomTargets
-        if (!isManualBloom) {
-          bloomTargets = computeBloomTargets(co, diff, totalCount)
-        } else if (isMix) {
-          // User-specified counts per K-level (e.g. K1:2 + K2:3)
-          const [kLowLevel, kHighLevel] = s.bloom.split('+')
-          bloomTargets = [...Array(s.kLow).fill(kLowLevel), ...Array(s.kHigh).fill(kHighLevel)]
-        } else {
-          bloomTargets = Array(totalCount).fill(s.bloom)
-        }
-        const singleBloom = isManualBloom && !isMix ? s.bloom : ''
-        const data = await generateQuestions({
-          course:             selection.course,
-          module:             selection.module,
-          topic:              topicId,
-          question_type:      qType,
-          count:              totalCount,
-          difficulty:         diff,
-          marks:              questionMarks[qType] || 2,
-          bloom:              singleBloom,
-          course_outcome:     co,
-          model:              'anthropic/claude-sonnet-4-5',
-          existing_questions: pool.map(q => q.question),
-          bloom_targets:      bloomTargets,
-        })
-        const tagged = data.questions.map(q => ({
-          ...q,
-          _type:       qType,
-          _difficulty: diff,
-          _bloom:      q.bloom || BLOOM_FALLBACK[diff],
-          _marks:      questionMarks[qType] || null,
-          _material:   data.meta.material_file || '',
-          _meta:       data.meta,
-          _status:     'pending',
-          _feedback:   '',
-        }))
-        setPool(prev => [...prev, ...tagged])
-        totalFiltered += data.filtered_count || 0
-      } catch (e) {
-        patchType(qType, diff, { loading: false, error: e.message })
-        return
+    // Use the first available topic — count is always the exact total the user set
+    const topicId = effectiveTopics[0]
+    try {
+      const isManualBloom = s.bloom && s.bloom !== 'auto'
+      let bloomTargets
+      if (!isManualBloom) {
+        bloomTargets = computeBloomTargets(co, diff, totalCount)
+      } else if (isMix) {
+        const [kLowLevel, kHighLevel] = s.bloom.split('+')
+        bloomTargets = [...Array(s.kLow ?? 0).fill(kLowLevel), ...Array(s.kHigh ?? 0).fill(kHighLevel)]
+      } else {
+        bloomTargets = Array(totalCount).fill(s.bloom)
       }
+      const singleBloom = isManualBloom && !isMix ? s.bloom : ''
+      const data = await generateQuestions({
+        course:             selection.course,
+        module:             selection.module,
+        topic:              topicId,
+        question_type:      qType,
+        count:              totalCount,
+        difficulty:         diff,
+        marks:              questionMarks[qType] || 2,
+        bloom:              singleBloom,
+        course_outcome:     co,
+        model:              'anthropic/claude-sonnet-4-5',
+        existing_questions: pool.map(q => q.question),
+        bloom_targets:      bloomTargets,
+      })
+      const tagged = data.questions.map(q => ({
+        ...q,
+        _type:       qType,
+        _difficulty: diff,
+        _bloom:      q.bloom || BLOOM_FALLBACK[diff],
+        _marks:      questionMarks[qType] || null,
+        _material:   data.meta.material_file || '',
+        _meta:       data.meta,
+        _status:     'pending',
+        _feedback:   '',
+      }))
+      setPool(prev => [...prev, ...tagged])
+      const filtered = data.filtered_count || 0
+      patchType(qType, diff, {
+        loading: false,
+        info: filtered > 0 ? `${filtered} duplicate${filtered !== 1 ? 's' : ''} skipped` : '',
+      })
+    } catch (e) {
+      patchType(qType, diff, { loading: false, error: e.message })
     }
-
-    patchType(qType, diff, {
-      loading: false,
-      info: totalFiltered > 0 ? `${totalFiltered} duplicate${totalFiltered !== 1 ? 's' : ''} skipped` : '',
-    })
   }
 
   async function generateAllForType(qType) {
@@ -257,11 +253,6 @@ export default function PoolBuilder({
               ? effectiveTopicDisplays.join(', ')
               : `${effectiveTopicDisplays.slice(0, 2).join(', ')} + ${effectiveTopicDisplays.length - 2} more`
           }
-          {effectiveTopics.length > 1 && (
-            <span className="ml-2 text-blue-500">
-              — count per row is <em>per topic</em> (total = count × {effectiveTopics.length} topics)
-            </span>
-          )}
         </p>
       </div>
 
@@ -313,11 +304,11 @@ export default function PoolBuilder({
                 const s        = typeS[diff] || defaultDiff(diff)
                 const isMixRow = s.bloom?.includes('+')
                 const [kLowLevel, kHighLevel] = (s.bloom || '').split('+')
-                const totalCount = isMixRow ? (s.kLow + s.kHigh) : s.count
+                const totalCount = isMixRow ? ((s.kLow ?? 0) + (s.kHigh ?? 0)) : (s.count ?? 0)
                 const inPool = poolTypeStats[qType]?.[diff] || 0
-                const target = totalCount * Math.max(1, effectiveTopics.length)
+                const target = totalCount
                 const pct    = target > 0 ? Math.min(100, (inPool / target) * 100) : 0
-                const done   = totalCount > 0 && effectiveTopics.length > 0 && inPool >= target
+                const done   = totalCount > 0 && inPool >= target
 
                 return (
                   <div key={diff} className={`px-4 py-3.5 transition-colors ${s.loading ? 'bg-blue-50/30' : ''}`}>
@@ -385,9 +376,6 @@ export default function PoolBuilder({
                               </div>
                             ))}
                             <span className="text-[9px] text-gray-400 font-medium">={totalCount}</span>
-                            {effectiveTopics.length > 1 && (
-                              <span className="text-[10px] text-gray-400">×{effectiveTopics.length}</span>
-                            )}
                           </div>
                         ) : (
                           /* Single count */
@@ -403,9 +391,6 @@ export default function PoolBuilder({
                               onClick={() => patchType(qType, diff, { count: Math.min(20, s.count + 1) })}
                               disabled={s.loading}
                               className="w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center font-medium">+</button>
-                            {effectiveTopics.length > 1 && (
-                              <span className="text-[10px] text-gray-400 ml-0.5">×{effectiveTopics.length}</span>
-                            )}
                           </div>
                         )}
                         {totalCount > 0 && effectiveTopics.length > 0 && (
