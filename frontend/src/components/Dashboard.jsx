@@ -4,40 +4,35 @@ import { sheetsStatus, sheetsAuth, sheetsLog, sheetsDashboard } from '../api/cli
 // ── analytics helpers ─────────────────────────────────────────────────────────
 
 function computeMetrics({ approved = 0, rejected = 0, pending = 0 }) {
-  const total = approved + rejected + pending
-  const TP = rejected
-  const FP = 0
-  const FN = pending
-  const TN = approved
-  const precision = (TP + FP) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FP)) * 100
-  const recall    = (TP + FN) === 0 ? 0 : (TP / (TP + FN)) * 100
-  const accuracy  = total === 0 ? 0 : ((TP + TN) / total) * 100
-  const f1Raw     = (precision + recall) === 0 ? 0 : (2 * precision * recall) / (precision + recall) / 100
-  return { TP, FP, FN, TN, total, precision, recall, accuracy, f1: f1Raw }
+  const total        = approved + rejected + pending
+  const reviewed     = approved + rejected
+  const approvalRate    = reviewed === 0 ? null : (approved  / reviewed) * 100
+  const rejectionRate   = reviewed === 0 ? null : (rejected  / reviewed) * 100
+  const reviewCoverage  = total    === 0 ? 0    : (reviewed  / total)    * 100
+  return { total, approved, rejected, pending, reviewed, approvalRate, rejectionRate, reviewCoverage }
 }
 
-function getInsights({ precision, recall, FN, FP, total }) {
+function getInsights({ approvalRate, reviewCoverage, total, reviewed, rejected, pending }) {
   const out = []
   if (total === 0) {
-    out.push({ type: 'info', title: 'No questions in pool', body: 'Generate and review questions to see quality metrics here.' })
+    out.push({ type: 'info', title: 'No questions yet', body: 'Generate questions to see quality metrics here.' })
     return out
   }
-  if (precision >= 99) {
-    out.push({ type: 'success', title: 'Perfect precision', body: 'Every flag raised is valid. No reviewer time wasted on false alarms.' })
-  } else if (precision >= 75) {
-    out.push({ type: 'success', title: `Good precision (${precision.toFixed(1)}%)`, body: `Only ${FP} false flag${FP !== 1 ? 's' : ''}. Most rejections were valid.` })
+  if (reviewCoverage < 30) {
+    out.push({ type: 'warning', title: `Low review coverage (${reviewCoverage.toFixed(0)}%)`, body: `Only ${reviewed} of ${total} questions reviewed. Review more to get meaningful quality data.` })
+  } else if (reviewCoverage >= 80) {
+    out.push({ type: 'success', title: `High coverage (${reviewCoverage.toFixed(0)}%)`, body: `${reviewed} of ${total} questions have been reviewed.` })
   } else {
-    out.push({ type: 'warning', title: `Low precision (${precision.toFixed(1)}%)`, body: `${FP} questions were incorrectly rejected. Review your rejection criteria.` })
+    out.push({ type: 'info', title: `Review coverage (${reviewCoverage.toFixed(0)}%)`, body: `${pending} question${pending !== 1 ? 's' : ''} still pending review.` })
   }
-  if (recall < 40) {
-    out.push({ type: 'warning', title: `Low recall (${recall.toFixed(1)}%)`, body: `${FN} question${FN !== 1 ? 's' : ''} with fixable issues slipped through as pending. The agent is conservative, not permissive.` })
-  } else if (recall < 70) {
-    out.push({ type: 'info', title: `Moderate recall (${recall.toFixed(1)}%)`, body: `${FN} question${FN !== 1 ? 's' : ''} still pending review. Continue reviewing to improve coverage.` })
-  } else {
-    out.push({ type: 'success', title: `Strong recall (${recall.toFixed(1)}%)`, body: 'Most questions have been reviewed. The pool is well-monitored.' })
-  }
-  if (FN > 0) {
-    out.push({ type: 'info', title: 'Flagging threshold guidance', body: `Lowering the review threshold should improve recall with minimal precision cost (baseline FP is ${FP}).` })
+  if (reviewed > 0 && approvalRate !== null) {
+    if (approvalRate >= 80) {
+      out.push({ type: 'success', title: `Strong approval rate (${approvalRate.toFixed(1)}%)`, body: `${approved} of ${reviewed} reviewed questions approved — generation quality is high.` })
+    } else if (approvalRate >= 50) {
+      out.push({ type: 'info', title: `Moderate approval rate (${approvalRate.toFixed(1)}%)`, body: `${rejected} question${rejected !== 1 ? 's' : ''} rejected. Consider refining the generation prompts.` })
+    } else {
+      out.push({ type: 'warning', title: `Low approval rate (${approvalRate.toFixed(1)}%)`, body: `${rejected} of ${reviewed} reviewed questions were rejected. Generation quality needs improvement.` })
+    }
   }
   return out.slice(0, 3)
 }
@@ -76,22 +71,6 @@ function OutcomeBar({ label, value, total, barClass }) {
   )
 }
 
-function ConfusionCell({ value, label, colorClass, dimmed }) {
-  if (dimmed) {
-    return (
-      <div className="flex flex-col items-center justify-center py-4 rounded-xl gap-1 bg-gray-50 border border-gray-100">
-        <span className="text-2xl font-bold tabular-nums text-gray-300">{value}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-gray-300">{label}</span>
-      </div>
-    )
-  }
-  return (
-    <div className={`flex flex-col items-center justify-center py-4 rounded-xl gap-1 ${colorClass}`}>
-      <span className="text-2xl font-bold tabular-nums">{value}</span>
-      <span className="text-[9px] font-semibold uppercase tracking-wider opacity-70">{label}</span>
-    </div>
-  )
-}
 
 const INSIGHT_STYLES = {
   success: { wrap: 'bg-emerald-50 border-emerald-200', icon: '○', iconClass: 'text-emerald-600', titleClass: 'text-emerald-800', bodyClass: 'text-emerald-700' },
@@ -226,7 +205,6 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
   const metrics  = useMemo(() => computeMetrics(activeCounts), [activeCounts])
   const insights = useMemo(() => getInsights(metrics), [metrics])
 
-  const flaggedWithFeedback = pool.filter(q => q._feedback?.trim() && q._status !== 'rejected').length
   const sourceLabel = (stats && !stats.error && (stats.total || 0) > 0)
     ? 'All sessions (Google Sheets)'
     : 'Current pool'
@@ -369,80 +347,87 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
         {hasData && (
           <div className="max-w-5xl mx-auto space-y-5">
 
-            {/* CORE EFFICIENCY METRICS */}
-            <Section title="Core Efficiency Metrics">
+            {/* SUMMARY COUNTS */}
+            <Section title={`Question Pool — ${metrics.total} total`}>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <MetricCard
-                  label="Precision"
-                  value={metrics.precision === 100 ? '100%' : `${metrics.precision.toFixed(1)}%`}
-                  sub={metrics.FP === 0 ? 'Zero false flags' : `${metrics.FP} false flag${metrics.FP !== 1 ? 's' : ''}`}
+                  label="Total Generated"
+                  value={metrics.total}
+                  sub={sourceLabel}
+                  accent="text-blue-700"
+                />
+                <MetricCard
+                  label="Approved"
+                  value={metrics.approved}
+                  sub={metrics.reviewed > 0 ? `${((metrics.approved / metrics.reviewed) * 100).toFixed(0)}% of reviewed` : 'none reviewed yet'}
                   accent="text-emerald-600"
                 />
                 <MetricCard
-                  label="Recall"
-                  value={`${metrics.recall.toFixed(1)}%`}
-                  sub={`${metrics.FN} issue${metrics.FN !== 1 ? 's' : ''} missed`}
+                  label="Rejected"
+                  value={metrics.rejected}
+                  sub={metrics.reviewed > 0 ? `${((metrics.rejected / metrics.reviewed) * 100).toFixed(0)}% of reviewed` : 'none reviewed yet'}
+                  accent="text-red-500"
+                />
+                <MetricCard
+                  label="Pending Review"
+                  value={metrics.pending}
+                  sub={metrics.total > 0 ? `${(100 - metrics.reviewCoverage).toFixed(0)}% unreviewed` : ''}
                   accent="text-amber-500"
-                />
-                <MetricCard
-                  label="F1 Score"
-                  value={metrics.f1.toFixed(2)}
-                  sub="Harmonic mean"
-                  accent="text-blue-600"
-                />
-                <MetricCard
-                  label="Accuracy"
-                  value={`${metrics.accuracy.toFixed(1)}%`}
-                  sub={`${metrics.TP + metrics.TN} of ${metrics.total} correct`}
-                  accent="text-indigo-600"
                 />
               </div>
             </Section>
 
-            {/* OUTCOMES + CONFUSION MATRIX */}
+            {/* REVIEW PROGRESS + QUALITY */}
             <div className="grid sm:grid-cols-2 gap-4">
 
-              {/* Question Outcomes */}
-              <Section title={`Question Outcomes (${metrics.total} total)`}>
+              {/* Status breakdown */}
+              <Section title="Review Breakdown">
                 <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-3.5">
-                  <OutcomeBar label="Correct approvals"    value={metrics.TN}          total={metrics.total} barClass="bg-emerald-400" />
-                  <OutcomeBar label="Missed issues (FN)"   value={metrics.FN}          total={metrics.total} barClass="bg-amber-400"   />
-                  <OutcomeBar label="Flagged for revision" value={flaggedWithFeedback}  total={metrics.total} barClass="bg-blue-400"    />
-                  <OutcomeBar label="Correctly rejected"   value={metrics.TP}          total={metrics.total} barClass="bg-indigo-400"  />
-                  <OutcomeBar label="False flags"          value={metrics.FP}          total={metrics.total} barClass="bg-gray-300"    />
+                  <OutcomeBar label="Approved"      value={metrics.approved} total={metrics.total} barClass="bg-emerald-400" />
+                  <OutcomeBar label="Rejected"      value={metrics.rejected} total={metrics.total} barClass="bg-red-400"     />
+                  <OutcomeBar label="Pending review" value={metrics.pending}  total={metrics.total} barClass="bg-amber-300"   />
                 </div>
               </Section>
 
-              {/* Confusion Matrix */}
-              <Section title="Confusion Matrix">
-                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                  {/* column headers */}
-                  <div className="grid grid-cols-[1fr_1fr_1fr] gap-2 text-center text-[10px] mb-2">
-                    <div />
-                    <span className="font-bold text-gray-400 uppercase tracking-wider">Predicted: flag</span>
-                    <span className="font-bold text-gray-400 uppercase tracking-wider">Predicted: approve</span>
+              {/* Quality summary */}
+              <Section title="Quality Summary">
+                <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm space-y-4">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-500">Approval Rate</span>
+                      <span className="font-bold text-emerald-600">
+                        {metrics.approvalRate !== null ? `${metrics.approvalRate.toFixed(1)}%` : '—'}
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-400 rounded-full transition-all duration-500"
+                        style={{ width: `${metrics.approvalRate ?? 0}%` }} />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      {metrics.reviewed > 0
+                        ? `${metrics.approved} approved of ${metrics.reviewed} reviewed`
+                        : 'No questions reviewed yet'}
+                    </p>
                   </div>
-                  <div className="grid grid-cols-[auto_1fr_1fr] gap-2 items-center">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pr-1 leading-tight text-center">
-                      Actual:<br />problem
-                    </span>
-                    <ConfusionCell value={metrics.TP} label="true positive"  colorClass="bg-emerald-50 border border-emerald-200 text-emerald-700" />
-                    <ConfusionCell value={metrics.FN} label="false negative" colorClass="bg-amber-50  border border-amber-200  text-amber-700"   />
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pr-1 leading-tight text-center">
-                      Actual:<br />clean
-                    </span>
-                    <ConfusionCell value={metrics.FP} label="false positive" colorClass="bg-slate-50 border border-slate-200 text-slate-500" dimmed={metrics.FP === 0} />
-                    <ConfusionCell value={metrics.TN} label="true negative"  colorClass="bg-emerald-50 border border-emerald-200 text-emerald-700" />
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-500">Review Coverage</span>
+                      <span className="font-bold text-blue-600">{metrics.reviewCoverage.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-400 rounded-full transition-all duration-500"
+                        style={{ width: `${metrics.reviewCoverage}%` }} />
+                    </div>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      {metrics.reviewed} of {metrics.total} questions reviewed
+                    </p>
                   </div>
-                  <p className="text-[10px] text-gray-400 text-center mt-3">
-                    {metrics.TP + metrics.FN} total problematic questions in dataset
-                  </p>
                 </div>
               </Section>
             </div>
 
-            {/* DIAGNOSTIC INSIGHTS */}
-            <Section title="Diagnostic Insights">
+            {/* INSIGHTS */}
+            <Section title="Insights">
               <div className="space-y-2">
                 {insights.map((ins, i) => <InsightCard key={i} insight={ins} />)}
               </div>
