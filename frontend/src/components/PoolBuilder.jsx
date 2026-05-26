@@ -121,7 +121,7 @@ export default function PoolBuilder({
   async function generateForTypeDiff(qType, diff) {
     const s = typeSettings[qType]?.[diff]
     const isMix = s?.bloom?.includes('+')
-    const totalCount = isMix ? (s.kLow + s.kHigh) : s?.count
+    const totalCount = isMix ? ((s.kLow ?? 0) + (s.kHigh ?? 0)) : (s?.count ?? 0)
     if (!s || totalCount === 0 || s.loading) return
 
     if (effectiveTopics.length === 0) {
@@ -188,7 +188,9 @@ export default function PoolBuilder({
   async function generateAllForType(qType) {
     for (const diff of DIFFICULTIES) {
       const s = typeSettings[qType]?.[diff]
-      if (s?.count > 0) await generateForTypeDiff(qType, diff)
+      const isMix = s?.bloom?.includes('+')
+      const total = isMix ? ((s?.kLow ?? 0) + (s?.kHigh ?? 0)) : (s?.count ?? 0)
+      if (total > 0) await generateForTypeDiff(qType, diff)
     }
   }
 
@@ -327,7 +329,15 @@ export default function PoolBuilder({
                       {/* Bloom selector */}
                       <select
                         value={s.bloom || 'auto'}
-                        onChange={e => patchType(qType, diff, { bloom: e.target.value })}
+                        onChange={e => {
+                          const newBloom = e.target.value
+                          const patch = { bloom: newBloom }
+                          if (newBloom.includes('+') && (s.kLow == null || s.kHigh == null)) {
+                            patch.kLow = 2
+                            patch.kHigh = 3
+                          }
+                          patchType(qType, diff, patch)
+                        }}
                         disabled={s.loading}
                         className="text-[10px] font-semibold text-gray-600 bg-gray-100 border border-gray-200 rounded px-1 py-0.5 w-full focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-40 cursor-pointer">
                         {diff === 'Easy' && <>
@@ -354,20 +364,24 @@ export default function PoolBuilder({
                       <div className="flex items-center gap-2 min-w-0">
                         {isMixRow ? (
                           /* Custom K-level counters */
-                          <div className="flex items-center gap-3 shrink-0 flex-wrap">
+                          <div className="flex items-center gap-3 shrink-0">
                             {[
-                              { key: 'kLow',  label: kLowLevel,  val: s.kLow  },
-                              { key: 'kHigh', label: kHighLevel, val: s.kHigh },
-                            ].map(({ key, label, val }) => (
-                              <div key={key} className="flex items-center gap-1">
+                              { propKey: 'kLow',  label: kLowLevel,  val: s.kLow  ?? 2 },
+                              { propKey: 'kHigh', label: kHighLevel, val: s.kHigh ?? 3 },
+                            ].map(({ propKey, label, val }) => (
+                              <div key={propKey} className="flex items-center gap-1">
                                 <span className="text-[9px] font-bold text-indigo-600 w-6">{label}</span>
-                                <button onClick={() => patchType(qType, diff, { [key]: Math.max(0, val - 1) })}
+                                <button
+                                  type="button"
+                                  onClick={() => patchType(qType, diff, { [propKey]: Math.max(0, val - 1) })}
                                   disabled={s.loading}
-                                  className="w-5 h-5 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center text-xs">−</button>
-                                <span className="w-5 text-center text-sm font-semibold tabular-nums">{val}</span>
-                                <button onClick={() => patchType(qType, diff, { [key]: Math.min(20, val + 1) })}
+                                  className="w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center font-medium">−</button>
+                                <span className="w-6 text-center text-sm font-semibold tabular-nums">{val}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => patchType(qType, diff, { [propKey]: Math.min(20, val + 1) })}
                                   disabled={s.loading}
-                                  className="w-5 h-5 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center text-xs">+</button>
+                                  className="w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center font-medium">+</button>
                               </div>
                             ))}
                             <span className="text-[9px] text-gray-400 font-medium">={totalCount}</span>
@@ -378,11 +392,15 @@ export default function PoolBuilder({
                         ) : (
                           /* Single count */
                           <div className="flex items-center gap-1 shrink-0">
-                            <button onClick={() => patchType(qType, diff, { count: Math.max(0, s.count - 1) })}
+                            <button
+                              type="button"
+                              onClick={() => patchType(qType, diff, { count: Math.max(0, s.count - 1) })}
                               disabled={s.loading}
                               className="w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center font-medium">−</button>
                             <span className="w-6 text-center text-sm font-semibold tabular-nums">{s.count}</span>
-                            <button onClick={() => patchType(qType, diff, { count: Math.min(20, s.count + 1) })}
+                            <button
+                              type="button"
+                              onClick={() => patchType(qType, diff, { count: Math.min(20, s.count + 1) })}
                               disabled={s.loading}
                               className="w-6 h-6 rounded border border-gray-200 text-gray-500 hover:bg-gray-100 disabled:opacity-40 flex items-center justify-center font-medium">+</button>
                             {effectiveTopics.length > 1 && (
