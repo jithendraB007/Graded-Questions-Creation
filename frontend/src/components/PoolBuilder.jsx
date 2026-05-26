@@ -130,9 +130,18 @@ export default function PoolBuilder({
     for (const topicId of effectiveTopics) {
       try {
         const isManualBloom = s.bloom && s.bloom !== 'auto'
-        const bloomTargets = isManualBloom
-          ? Array(s.count).fill(s.bloom)
-          : computeBloomTargets(co, diff, s.count)
+        let bloomTargets
+        if (!isManualBloom) {
+          bloomTargets = computeBloomTargets(co, diff, s.count)
+        } else if (s.bloom.includes('+')) {
+          // Equal mix of two K-levels (e.g. "K1+K2")
+          const [kLow, kHigh] = s.bloom.split('+')
+          const half = Math.floor(s.count / 2)
+          bloomTargets = [...Array(half).fill(kLow), ...Array(s.count - half).fill(kHigh)]
+        } else {
+          bloomTargets = Array(s.count).fill(s.bloom)
+        }
+        const singleBloom = isManualBloom && !s.bloom.includes('+') ? s.bloom : ''
         const data = await generateQuestions({
           course:             selection.course,
           module:             selection.module,
@@ -141,7 +150,7 @@ export default function PoolBuilder({
           count:              s.count,
           difficulty:         diff,
           marks:              questionMarks[qType] || 2,
-          bloom:              isManualBloom ? s.bloom : '',
+          bloom:              singleBloom,
           course_outcome:     co,
           model:              'anthropic/claude-sonnet-4-5',
           existing_questions: pool.map(q => q.question),
@@ -312,13 +321,24 @@ export default function PoolBuilder({
                         onChange={e => patchType(qType, diff, { bloom: e.target.value })}
                         disabled={s.loading}
                         className="text-[10px] font-semibold text-gray-600 bg-gray-100 border border-gray-200 rounded px-1 py-0.5 w-full focus:outline-none focus:ring-1 focus:ring-blue-300 disabled:opacity-40 cursor-pointer">
-                        <option value="auto">Auto ({s.count > 0 ? bloomSummary(computeBloomTargets(co, diff, s.count)) : BLOOM_RANGE[diff]})</option>
-                        <option value="K1">K1 – Remember</option>
-                        <option value="K2">K2 – Understand</option>
-                        <option value="K3">K3 – Apply</option>
-                        <option value="K4">K4 – Analyze</option>
-                        <option value="K5">K5 – Evaluate</option>
-                        <option value="K6">K6 – Create</option>
+                        {diff === 'Easy' && <>
+                          <option value="auto">Auto (K1–K2)</option>
+                          <option value="K1+K2">K1+K2 Mix</option>
+                          <option value="K1">K1 – Remember</option>
+                          <option value="K2">K2 – Understand</option>
+                        </>}
+                        {diff === 'Medium' && <>
+                          <option value="auto">Auto (K3–K4)</option>
+                          <option value="K3+K4">K3+K4 Mix</option>
+                          <option value="K3">K3 – Apply</option>
+                          <option value="K4">K4 – Analyze</option>
+                        </>}
+                        {diff === 'Hard' && <>
+                          <option value="auto">Auto (K5–K6)</option>
+                          <option value="K5+K6">K5+K6 Mix</option>
+                          <option value="K5">K5 – Evaluate</option>
+                          <option value="K6">K6 – Create</option>
+                        </>}
                       </select>
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="flex items-center gap-1 shrink-0">
