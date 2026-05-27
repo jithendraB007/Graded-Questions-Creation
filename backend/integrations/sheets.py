@@ -470,6 +470,33 @@ class SheetsClient:
         }
 
 
+    def bulk_approve(self) -> dict:
+        """Mark every 'pending' row in Questions Log as 'approved'."""
+        sid = self._ensure_sheet()
+        svc = self._svc()
+
+        result = svc.spreadsheets().values().get(
+            spreadsheetId=sid, range="Questions Log!A2:M"
+        ).execute()
+        rows = result.get("values", [])
+
+        # Status column = index 11 (column L)
+        updates = []
+        for i, row in enumerate(rows):
+            status = row[11] if len(row) > 11 else ""
+            if status in ("pending", ""):
+                sheet_row = i + 2   # +1 for header, +1 for 1-indexing
+                updates.append({"range": f"Questions Log!L{sheet_row}", "values": [["approved"]]})
+
+        if updates:
+            svc.spreadsheets().values().batchUpdate(
+                spreadsheetId=sid,
+                body={"valueInputOption": "RAW", "data": updates},
+            ).execute()
+            self._refresh_dashboard(svc, sid)
+
+        return {"updated": len(updates)}
+
     # ── Google Drive upload ───────────────────────────────────────────────────
 
     def upload_excel_to_drive(self, file_bytes: bytes, filename: str) -> tuple[str, str]:

@@ -853,6 +853,18 @@ def sheets_debug():
     }
 
 
+@app.post("/api/sheets/bulk-approve")
+def sheets_bulk_approve():
+    """Mark every pending question in the Questions Log as approved."""
+    if sheets_client.auth_status != "ready":
+        raise HTTPException(401, "Not authenticated with Google Sheets.")
+    try:
+        result = sheets_client.bulk_approve()
+        return result
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 @app.get("/api/sheets/token")
 def sheets_token():
     """Return the current refreshed token JSON — use this to update GOOGLE_TOKEN in Render."""
@@ -863,7 +875,7 @@ def sheets_token():
 
 
 @app.post("/api/import/csv")
-async def import_csv(file: UploadFile = File(...)):
+async def import_csv(file: UploadFile = File(...), status: str = "approved"):
     """Parse a question CSV and append all rows to Google Sheets Questions Log."""
     if sheets_client.auth_status != "ready":
         raise HTTPException(401, "Not authenticated with Google Sheets. Sign in first.")
@@ -899,7 +911,7 @@ async def import_csv(file: UploadFile = File(...)):
             "topic_display": row.get("Topic name", "").strip(),
             "course_outcome": row.get("Course Outcomes", "").strip(),
             "course_display": "",
-            "status":        "pending",
+            "status":        status if status in ("approved", "pending", "rejected") else "approved",
             "feedback":      "",
         })
 

@@ -172,8 +172,10 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
   const [pollTimer,    setPollTimer]    = useState(null)
   const [tokenJson,    setTokenJson]    = useState('')
   const [tokenCopied,  setTokenCopied]  = useState(false)
-  const [importing,    setImporting]    = useState(false)
-  const [importResult, setImportResult] = useState('')
+  const [importing,       setImporting]       = useState(false)
+  const [importResult,    setImportResult]    = useState('')
+  const [approving,       setApproving]       = useState(false)
+  const [approveResult,   setApproveResult]   = useState('')
   const csvInputRef = useRef(null)
 
   const loadStatus = useCallback(async () => {
@@ -270,6 +272,18 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
     finally { setImporting(false) }
   }
 
+  async function handleBulkApprove() {
+    setApproving(true); setApproveResult('')
+    try {
+      const res = await fetch('/api/sheets/bulk-approve', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || 'Bulk approve failed')
+      setApproveResult(`✓ ${data.updated} pending question${data.updated !== 1 ? 's' : ''} marked as approved.`)
+      await fetchStats()
+    } catch (err) { setApproveResult(`Error: ${err.message}`) }
+    finally { setApproving(false) }
+  }
+
   // ── derive counts ────────────────────────────────────────────────────────────
   const poolCounts = useMemo(() => ({
     approved: pool.filter(q => q._status === 'approved').length,
@@ -299,7 +313,7 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
   const precisionRating    = ratingFor(metrics.precision,   90, 70)
   const recallRating       = ratingFor(metrics.recall,      80, 60)
   const f1Rating           = ratingFor(metrics.f1 * 100,    80, 65)
-  const approvalRateRating = ratingFor(metrics.approvalRate, 80, 60)
+  const approvalRateRating = ratingFor(metrics.approvalRate, 83, 65)
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-50">
@@ -359,6 +373,12 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
                 {importing ? 'Importing…' : '⬆ Import CSV'}
               </button>
               <input ref={csvInputRef} type="file" accept=".csv" className="hidden" onChange={handleImportCsv} />
+              {(stats?.status?.pending > 0 || poolCounts.pending > 0) && (
+                <button onClick={handleBulkApprove} disabled={approving}
+                  className="text-xs font-medium text-gray-500 hover:text-emerald-700 border border-gray-200 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+                  {approving ? 'Approving…' : '✓ Approve All Pending'}
+                </button>
+              )}
               <button onClick={handleGetToken} title="Copy refreshed token for Render env var update"
                 className="text-xs font-medium text-gray-500 hover:text-emerald-700 border border-gray-200 hover:border-emerald-300 px-3 py-1.5 rounded-lg transition-colors">
                 {tokenCopied ? '✓ Copied' : '⬇ Token'}
@@ -395,6 +415,11 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
         {importResult && (
           <div className={`max-w-5xl mx-auto mb-3 text-xs font-medium rounded-xl px-4 py-2.5 border ${importResult.startsWith('Error') ? 'text-red-700 bg-red-50 border-red-200' : 'text-indigo-700 bg-indigo-50 border-indigo-200'}`}>
             {importResult}
+          </div>
+        )}
+        {approveResult && (
+          <div className={`max-w-5xl mx-auto mb-3 text-xs font-medium rounded-xl px-4 py-2.5 border ${approveResult.startsWith('Error') ? 'text-red-700 bg-red-50 border-red-200' : 'text-emerald-700 bg-emerald-50 border-emerald-200'}`}>
+            {approveResult}
           </div>
         )}
         {tokenJson && (
