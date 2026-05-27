@@ -4,23 +4,24 @@ import { sheetsStatus, sheetsAuth, sheetsLog, sheetsDashboard } from '../api/cli
 // ── analytics helpers ─────────────────────────────────────────────────────────
 
 function computeMetrics({ approved = 0, rejected = 0, pending = 0 }) {
-  const total = approved + rejected + pending
-  const TP = rejected   // correctly flagged bad questions
-  const FP = 0          // human reviewer is ground truth — no false rejections
-  const FN = pending    // unchecked questions; potential missed issues
-  const TN = approved   // correctly passed good questions
-  const reviewed  = approved + rejected
-  const precision = (TP + FP) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FP)) * 100
-  const recall    = (TP + FN) === 0 ? (total > 0 ? 100 : 0) : (TP / (TP + FN)) * 100
-  const p = precision / 100, r = recall / 100
-  const f1            = (p + r) === 0 ? 0 : (2 * p * r) / (p + r)
-  const approvalRate  = reviewed === 0 ? (total > 0 ? 100 : 0) : (TN / reviewed) * 100
-  return { TP, FP, FN, TN, total, approved, rejected, pending, reviewed, precision, recall, f1, approvalRate }
+  const total          = approved + rejected + pending
+  const reviewed       = approved + rejected
+  const approvalRate   = reviewed === 0 ? (total > 0 ? 100 : 0) : (approved / reviewed) * 100
+  const rejectionRate  = reviewed === 0 ? 0 : (rejected / reviewed) * 100
+  const reviewCoverage = total === 0 ? 0 : (reviewed / total) * 100
+  return { total, approved, rejected, pending, reviewed, approvalRate, rejectionRate, reviewCoverage }
 }
 
 function ratingFor(value, goodThresh, fairThresh) {
   if (value >= goodThresh) return 'Good'
   if (value >= fairThresh) return 'Fair'
+  return 'Poor'
+}
+
+// For metrics where lower = better (e.g. rejection rate)
+function ratingForLower(value, goodThresh, fairThresh) {
+  if (value <= goodThresh) return 'Good'
+  if (value <= fairThresh) return 'Fair'
   return 'Poor'
 }
 
@@ -50,12 +51,15 @@ function RatingBadge({ rating }) {
 }
 
 function MetricCard({ icon, label, displayValue, description, rating }) {
-  const accent = rating === 'Good' ? 'text-emerald-600' : rating === 'Fair' ? 'text-amber-500' : 'text-red-500'
+  const accent = rating === 'Good' ? 'text-emerald-600'
+               : rating === 'Fair' ? 'text-amber-500'
+               : rating === 'Poor' ? 'text-red-500'
+               : 'text-blue-700'
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col gap-2.5">
       <div className="flex items-start justify-between">
         <span className="text-lg">{icon}</span>
-        <RatingBadge rating={rating} />
+        {rating ? <RatingBadge rating={rating} /> : <span />}
       </div>
       <div>
         <p className={`text-3xl font-bold tabular-nums leading-tight ${accent}`}>{displayValue}</p>
@@ -79,21 +83,21 @@ function OutcomeBar({ label, value, total, barClass }) {
   )
 }
 
-function StackedOutcomeBar({ TP, FP, FN, TN, total }) {
+function ReviewBar({ approved, rejected, pending, total }) {
   if (total === 0) return null
   const pct = v => ((v / total) * 100).toFixed(1)
   const segments = [
-    { value: TN, color: 'bg-emerald-400', label: 'Correct Approvals' },
-    { value: TP, color: 'bg-blue-500',    label: 'Correctly Flagged'  },
-    { value: FN, color: 'bg-amber-400',   label: 'Missed Issues'      },
-    { value: FP, color: 'bg-red-400',     label: 'False Flags'        },
+    { value: approved, color: 'bg-emerald-400', label: 'Approved'       },
+    { value: rejected, color: 'bg-red-400',     label: 'Rejected'       },
+    { value: pending,  color: 'bg-amber-300',   label: 'Pending Review' },
   ]
   return (
     <div className="space-y-3">
       <div className="flex h-8 rounded-lg overflow-hidden w-full">
         {segments.map(({ value, color, label }) =>
           value > 0
-            ? <div key={label} className={`${color} transition-all duration-500`} style={{ width: `${pct(value)}%` }} title={`${label}: ${value}`} />
+            ? <div key={label} className={`${color} transition-all duration-500`}
+                style={{ width: `${pct(value)}%` }} title={`${label}: ${value}`} />
             : null
         )}
       </div>
@@ -102,7 +106,8 @@ function StackedOutcomeBar({ TP, FP, FN, TN, total }) {
           <div key={label} className="flex items-center gap-1.5 text-[11px] text-gray-600">
             <span className={`w-2.5 h-2.5 rounded-sm ${color} shrink-0`} />
             <span className="font-bold tabular-nums">{value}</span>
-            <span>{label}</span>
+            <span className="text-gray-500">{label}</span>
+            <span className="text-gray-400">({pct(value)}%)</span>
           </div>
         ))}
       </div>
@@ -110,50 +115,21 @@ function StackedOutcomeBar({ TP, FP, FN, TN, total }) {
   )
 }
 
-function ConfusionMatrix({ TP, FP, FN, TN }) {
+function ReviewSummary({ approved, rejected, pending }) {
+  const boxes = [
+    { value: approved, label: 'Approved',       icon: '✓', bg: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', sub: 'text-emerald-500' },
+    { value: rejected, label: 'Rejected',       icon: '✕', bg: 'bg-red-50     border-red-200',     text: 'text-red-600',     sub: 'text-red-400'     },
+    { value: pending,  label: 'Pending Review', icon: '…', bg: 'bg-amber-50   border-amber-200',   text: 'text-amber-700',   sub: 'text-amber-500'   },
+  ]
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-      {/* Column headers */}
-      <div className="flex mb-2 pl-32">
-        <span className="flex-1 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Human: Problem</span>
-        <span className="flex-1 text-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">Human: Clean</span>
-      </div>
-      {/* Row: AI Said Problem */}
-      <div className="flex items-stretch gap-2 mb-2">
-        <div className="w-32 shrink-0 flex items-center">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-snug">AI Said: Problem</span>
+    <div className="grid grid-cols-3 gap-3">
+      {boxes.map(({ value, label, icon, bg, text, sub }) => (
+        <div key={label} className={`flex flex-col items-center justify-center rounded-xl py-5 px-3 border text-center ${bg}`}>
+          <span className={`text-lg font-bold ${text}`}>{icon}</span>
+          <p className={`text-2xl font-bold tabular-nums mt-1 ${text}`}>{value}</p>
+          <p className={`text-[10px] font-bold uppercase tracking-wide mt-1 ${sub}`}>{label}</p>
         </div>
-        <div className="flex-1 grid grid-cols-2 gap-2">
-          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-emerald-50 border border-emerald-200 text-center">
-            <p className="text-2xl font-bold tabular-nums text-emerald-700">{TP}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 mt-1">True Positive</p>
-            <p className="text-[9px] text-emerald-500 mt-0.5">Correctly Flagged</p>
-          </div>
-          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-red-50 border border-red-200 text-center opacity-80">
-            <p className="text-2xl font-bold tabular-nums text-red-600">{FP}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-red-500 mt-1">False Positive</p>
-            <p className="text-[9px] text-red-400 mt-0.5">False Flags</p>
-          </div>
-        </div>
-      </div>
-      {/* Row: AI Said Clean */}
-      <div className="flex items-stretch gap-2">
-        <div className="w-32 shrink-0 flex items-center">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-snug">AI Said: Clean</span>
-        </div>
-        <div className="flex-1 grid grid-cols-2 gap-2">
-          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-amber-50 border border-amber-200 text-center">
-            <p className="text-2xl font-bold tabular-nums text-amber-700">{FN}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-amber-600 mt-1">False Negative</p>
-            <p className="text-[9px] text-amber-500 mt-0.5">Missed Issues</p>
-          </div>
-          <div className="flex flex-col items-center justify-center rounded-xl py-5 bg-emerald-50 border border-emerald-200 text-center">
-            <p className="text-2xl font-bold tabular-nums text-emerald-700">{TN}</p>
-            <p className="text-[9px] font-bold uppercase tracking-wide text-emerald-600 mt-1">True Negative</p>
-            <p className="text-[9px] text-emerald-500 mt-0.5">Correct Approvals</p>
-          </div>
-        </div>
-      </div>
+      ))}
     </div>
   )
 }
@@ -307,13 +283,14 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
     if (stats && !stats.error && stats.metrics && (stats.total || 0) > 0) {
       const m = stats.metrics
       return {
-        ...m,
-        total:    stats.total,
-        approved: m.TN,
-        rejected: m.TP,
-        pending:  m.FN,
-        f1:       m.f1,
-        approvalRate: m.approval_rate,
+        total:         stats.total,
+        approved:      m.approved ?? activeCounts.approved,
+        rejected:      m.rejected ?? activeCounts.rejected,
+        pending:       m.pending  ?? activeCounts.pending,
+        reviewed:      m.reviewed,
+        approvalRate:  m.approval_rate,
+        rejectionRate: m.rejection_rate,
+        reviewCoverage: m.review_coverage,
       }
     }
     return computeMetrics(activeCounts)
@@ -325,10 +302,9 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
 
   const hasData = metrics.total > 0
 
-  const precisionRating    = ratingFor(metrics.precision,   90, 70)
-  const recallRating       = ratingFor(metrics.recall,      80, 60)
-  const f1Rating           = ratingFor(metrics.f1 * 100,    80, 65)
-  const approvalRateRating = ratingFor(metrics.approvalRate, 83, 65)
+  const approvalRating  = ratingFor(metrics.approvalRate,   83, 65)
+  const coverageRating  = ratingFor(metrics.reviewCoverage, 80, 50)
+  const rejectionRating = ratingForLower(metrics.rejectionRate, 17, 35)
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-slate-50">
@@ -503,59 +479,57 @@ export default function Dashboard({ pool = [], co = '', onClose }) {
             </div>
 
             {/* ── 4 Metric Cards ────────────────────────────────────────────── */}
-            <Section title="AI Reviewer Performance Metrics">
+            <Section title="Quality Metrics">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <MetricCard
-                  icon="🎯"
-                  label="Precision"
-                  displayValue={`${metrics.precision.toFixed(1)}%`}
-                  rating={precisionRating}
-                  description={`${metrics.precision.toFixed(1)}% of flagged questions were actually bad`}
-                />
-                <MetricCard
-                  icon="🔍"
-                  label="Recall"
-                  displayValue={`${metrics.recall.toFixed(1)}%`}
-                  rating={recallRating}
-                  description={`${metrics.recall.toFixed(1)}% of actual bad questions were caught`}
-                />
-                <MetricCard
-                  icon="⚖️"
-                  label="F1 Score"
-                  displayValue={metrics.f1.toFixed(2)}
-                  rating={f1Rating}
-                  description="Harmonic mean of Precision and Recall"
-                />
                 <MetricCard
                   icon="✅"
                   label="Approval Rate"
-                  displayValue={`${metrics.approvalRate.toFixed(1)}%`}
-                  rating={approvalRateRating}
-                  description={`${metrics.TN} approved of ${metrics.reviewed} reviewed questions`}
+                  displayValue={`${(metrics.approvalRate ?? 0).toFixed(1)}%`}
+                  rating={approvalRating}
+                  description={`${metrics.approved} approved of ${metrics.reviewed} reviewed`}
+                />
+                <MetricCard
+                  icon="❌"
+                  label="Rejection Rate"
+                  displayValue={`${(metrics.rejectionRate ?? 0).toFixed(1)}%`}
+                  rating={rejectionRating}
+                  description={`${metrics.rejected} rejected of ${metrics.reviewed} reviewed`}
+                />
+                <MetricCard
+                  icon="📋"
+                  label="Review Coverage"
+                  displayValue={`${(metrics.reviewCoverage ?? 0).toFixed(1)}%`}
+                  rating={coverageRating}
+                  description={`${metrics.reviewed} of ${metrics.total} questions checked`}
+                />
+                <MetricCard
+                  icon="📊"
+                  label="Total Generated"
+                  displayValue={metrics.total}
+                  rating={null}
+                  description={sourceLabel}
                 />
               </div>
             </Section>
 
-            {/* ── Question Outcomes stacked bar ─────────────────────────────── */}
+            {/* ── Review breakdown bar ──────────────────────────────────────── */}
             <Section title="Question Outcomes">
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <StackedOutcomeBar
-                  TP={metrics.TP}
-                  FP={metrics.FP}
-                  FN={metrics.FN}
-                  TN={metrics.TN}
+                <ReviewBar
+                  approved={metrics.approved}
+                  rejected={metrics.rejected}
+                  pending={metrics.pending}
                   total={metrics.total}
                 />
               </div>
             </Section>
 
-            {/* ── Confusion Matrix ──────────────────────────────────────────── */}
-            <Section title="Confusion Matrix">
-              <ConfusionMatrix
-                TP={metrics.TP}
-                FP={metrics.FP}
-                FN={metrics.FN}
-                TN={metrics.TN}
+            {/* ── Review summary boxes ──────────────────────────────────────── */}
+            <Section title="Review Summary">
+              <ReviewSummary
+                approved={metrics.approved}
+                rejected={metrics.rejected}
+                pending={metrics.pending}
               />
             </Section>
 

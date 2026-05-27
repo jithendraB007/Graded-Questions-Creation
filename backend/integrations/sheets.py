@@ -377,14 +377,14 @@ class SheetsClient:
         TN = status_c.get("approved", 0)   # correctly passed good questions
         reviewed = TP + TN
 
-        precision     = round(TP / (TP + FP) * 100, 1) if (TP + FP) > 0 else (100.0 if total > 0 else 0.0)
-        recall        = round(TP / (TP + FN) * 100, 1) if (TP + FN) > 0 else (100.0 if total > 0 else 0.0)
-        _p, _r        = precision / 100, recall / 100
-        f1            = round((2 * _p * _r) / (_p + _r), 2) if (_p + _r) > 0 else 0.0
-        approval_rate = round(TN / reviewed * 100, 1) if reviewed > 0 else (100.0 if total > 0 else 0.0)
-        apv_pct       = round(TN / total * 100) if total else 0
+        approval_rate  = round(TN / reviewed * 100, 1) if reviewed > 0 else (100.0 if total > 0 else 0.0)
+        rejection_rate = round(TP / reviewed * 100, 1) if reviewed > 0 else 0.0
+        review_cov     = round(reviewed / total * 100, 1) if total > 0 else 0.0
+        apv_pct        = round(TN / total * 100) if total else 0
 
-        def _rate(val, good, fair):
+        def _rate(val, good, fair, invert=False):
+            if invert:
+                return "Good" if val <= good else ("Fair" if val <= fair else "Poor")
             return "Good" if val >= good else ("Fair" if val >= fair else "Poor")
 
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
@@ -393,22 +393,19 @@ class SheetsClient:
             ["GA Question Generator — Agent Performance Dashboard", "", "", "", "", ""],
             [f"Last updated: {now}", "", f"Total: {total}", f"Reviewed: {reviewed}", f"Pending: {FN}", ""],
             [""],
-            ["── PERFORMANCE METRICS ──────────────────────────────────────────────"],
+            ["── QUALITY METRICS ──────────────────────────────────────────────────"],
             ["Metric", "Score", "Rating", "Threshold (Good / Fair)", "", ""],
-            ["Precision",     f"{precision}%",     _rate(precision,    90, 70), "≥ 90% / ≥ 70%",  "", ""],
-            ["Recall",        f"{recall}%",        _rate(recall,       80, 60), "≥ 80% / ≥ 60%",  "", ""],
-            ["F1 Score",      f"{f1}",             _rate(f1 * 100,     80, 65), "≥ 0.80 / ≥ 0.65", "", ""],
-            ["Approval Rate", f"{approval_rate}%", _rate(approval_rate, 83, 65), "≥ 83% / ≥ 65%", "", ""],
+            ["Approval Rate",   f"{approval_rate}%",  _rate(approval_rate,  83, 65),        "≥ 83% / ≥ 65%",   "", ""],
+            ["Rejection Rate",  f"{rejection_rate}%", _rate(rejection_rate, 17, 35, True),  "≤ 17% / ≤ 35%",   "", ""],
+            ["Review Coverage", f"{review_cov}%",     _rate(review_cov,     80, 50),        "≥ 80% / ≥ 50%",   "", ""],
+            ["Total Generated", total,                "",                                   "",                "", ""],
             [""],
-            ["── CONFUSION MATRIX ──────────────────────────────────────────────────"],
-            ["",              "Human: Problem", "Human: Clean", "", "", ""],
-            ["AI Said: Problem (Rejected)", TP, FP, "", "", ""],
-            ["AI Said: Clean  (Approved/Pending)", FN, TN, "", "", ""],
-            [""],
-            ["── SUMMARY ──────────────────────────────────────────────────────────"],
-            ["Total Questions", total, "", "Approved",  TN, f"{apv_pct}%"],
-            ["Reviewed",        reviewed, "", "Pending", FN, ""],
-            ["",                "",       "", "Rejected", TP, ""],
+            ["── REVIEW SUMMARY ────────────────────────────────────────────────────"],
+            ["Status",    "Count", "% of Total", "", "", ""],
+            ["Approved",  TN,      f"{apv_pct}%", "", "", ""],
+            ["Rejected",  TP,      f"{round(TP/total*100) if total else 0}%", "", "", ""],
+            ["Pending",   FN,      f"{round(FN/total*100) if total else 0}%", "", "", ""],
+            ["Reviewed",  reviewed, f"{round(review_cov)}%", "", "", ""],
             [""],
             ["── BY DIFFICULTY ──────"],
         ]
@@ -435,10 +432,9 @@ class SheetsClient:
 
         # Store computed metrics for _metrics reference (reused in get_stats)
         self._last_metrics = {
-            "precision": precision, "recall": recall,
-            "f1": f1, "approval_rate": approval_rate,
-            "TP": TP, "FP": FP, "FN": FN, "TN": TN,
-            "reviewed": reviewed,
+            "approval_rate": approval_rate, "rejection_rate": rejection_rate,
+            "review_coverage": review_cov,
+            "approved": TN, "rejected": TP, "pending": FN, "reviewed": reviewed,
         }
 
         svc.spreadsheets().values().clear(spreadsheetId=sid, range="Dashboard!A:F").execute()
@@ -489,17 +485,13 @@ class SheetsClient:
             mod_data[mod]["topics"].add(r.get("Topic", ""))
             mod_data[mod]["count"] += 1
 
-        # Compute metrics (TP=rejected, FP=0, FN=pending, TN=approved)
         TP_s  = status_c.get("rejected", 0)
         TN_s  = status_c.get("approved", 0)
         FN_s  = status_c.get("pending",  0)
         rev_s = TP_s + TN_s
-        # FP is always 0 — human reviewer is ground truth, so precision = 100% always
-        prec_s = 100.0 if total > 0 else 0.0
-        rec_s  = round(TP_s / (TP_s + FN_s) * 100, 1) if (TP_s + FN_s) > 0 else (100.0 if total > 0 else 0.0)
-        _ps, _rs = prec_s / 100, rec_s / 100
-        f1_s   = round((2 * _ps * _rs) / (_ps + _rs), 2) if (_ps + _rs) > 0 else 0.0
-        apr_s  = round(TN_s / rev_s * 100, 1) if rev_s > 0 else (100.0 if total > 0 else 0.0)
+        apr_s = round(TN_s / rev_s  * 100, 1) if rev_s  > 0 else (100.0 if total > 0 else 0.0)
+        rej_s = round(TP_s / rev_s  * 100, 1) if rev_s  > 0 else 0.0
+        cov_s = round(rev_s / total * 100, 1) if total  > 0 else 0.0
 
         return {
             "total":       total,
@@ -515,10 +507,10 @@ class SheetsClient:
                 for mod, v in sorted(mod_data.items())
             },
             "metrics": {
-                "precision": prec_s, "recall": rec_s,
-                "f1": f1_s, "approval_rate": apr_s,
-                "TP": TP_s, "FP": 0, "FN": FN_s, "TN": TN_s,
-                "reviewed": rev_s,
+                "approval_rate":  apr_s,
+                "rejection_rate": rej_s,
+                "review_coverage": cov_s,
+                "approved": TN_s, "rejected": TP_s, "pending": FN_s, "reviewed": rev_s,
             },
             "spreadsheet_url": cfg.get("spreadsheet_url", ""),
             "spreadsheet_id":  cfg.get("spreadsheet_id",  ""),
