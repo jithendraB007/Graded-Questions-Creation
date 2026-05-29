@@ -1,0 +1,1798 @@
+{
+  "evalId": "eval-tLc-2026-05-28T04:55:58",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-05-28T04:55:58.190Z",
+    "prompts": [
+      {
+        "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+        "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+        "id": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "provider": "openai:anthropic/claude-haiku-4-5",
+        "metrics": {
+          "score": 9,
+          "testPassCount": 9,
+          "testFailCount": 1,
+          "testErrorCount": 0,
+          "assertPassCount": 9,
+          "assertFailCount": 1,
+          "totalLatencyMs": 13859,
+          "tokenUsage": {
+            "prompt": 4391,
+            "completion": 846,
+            "cached": 0,
+            "total": 5237,
+            "numRequests": 10,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0
+            },
+            "assertions": {
+              "total": 4481,
+              "prompt": 3500,
+              "completion": 981,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 453,
+            "prompt": 356,
+            "completion": 97,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–B–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output states 'VALID' and the validator correctly identified that the 4 parts (A–D) form exactly one grammatically correct sentence in the order C–B–D–A, which matches the rubric's requirement. The validator also provided detailed reasoning confirming all five criteria are met.",
+              "tokensUsed": {
+                "total": 453,
+                "prompt": 356,
+                "completion": 97,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nThe question satisfies all five criteria: it presents exactly 4 parts with proper labels (A–D); the arrangement C–B–D–A forms one complete, grammatically correct sentence with proper subject-verb-object-adverbial structure; the solution order is correct and produces a meaningful sentence; this is the only logical arrangement that maintains grammatical coherence; and all parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–B–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "855df4e1-984e-4c15-9b1e-75845e7f8a08",
+        "latencyMs": 1209,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n\nSolution:\nC–B–D–A\n\nExplanation (if provided):\nThe correct order is: The accountant submits financial reports to the directors at the end of each month.\n(C) is the subject, (B) is the verb phrase, (D) is the indirect object, (A) is the time adverbial.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nThe question satisfies all five criteria: it presents exactly 4 parts with proper labels (A–D); the arrangement C–B–D–A forms one complete, grammatically correct sentence with proper subject-verb-object-adverbial structure; the solution order is correct and produces a meaningful sentence; this is the only logical arrangement that maintains grammatical coherence; and all parts are included in the solution.",
+          "tokenUsage": {
+            "total": 555,
+            "prompt": 463,
+            "completion": 92,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1209,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aab8d8b92cb6e-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:55:59 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944158-5Vd04eMa9i1fU29AmUpD"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA Easy CO1 — accountant submits reports scenario",
+          "vars": {
+            "bloom_level": "K2",
+            "difficulty": "Easy",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n",
+            "solution": "C–B–D–A",
+            "explanation": "The correct order is: The accountant submits financial reports to the directors at the end of each month.\n(C) is the subject, (B) is the verb phrase, (D) is the indirect object, (A) is the time adverbial.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–B–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "vars": {
+          "bloom_level": "K2",
+          "difficulty": "Easy",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n",
+          "solution": "C–B–D–A",
+          "explanation": "The correct order is: The accountant submits financial reports to the directors at the end of each month.\n(C) is the subject, (B) is the verb phrase, (D) is the indirect object, (A) is the time adverbial.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aab8d8b92cb6e-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:55:59 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944158-5Vd04eMa9i1fU29AmUpD"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 479,
+            "prompt": 389,
+            "completion": 90,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct passive sentence in order C–A–B–D. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output explicitly states 'VALID' and confirms that all five criteria are satisfied, including that the 4 parts (A–D) form exactly one grammatically correct passive sentence in the order C–A–B–D, which matches the rubric's requirements.",
+              "tokensUsed": {
+                "total": 479,
+                "prompt": 389,
+                "completion": 90,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nAll five criteria are satisfied: (1) exactly 4 parts labelled A–D are presented; (2) the arrangement C–A–B–D forms one complete, grammatically correct sentence with proper subject-verb-agent-location structure; (3) the solution order is correct and produces a meaningful passive construction; (4) the arrangement is unique—alternative orders like C–A–D–B or A–C–B–D would be ungrammatical or illogical; and (5) all four parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct passive sentence in order C–A–B–D. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "b1558c83-db5a-4468-8b87-1272aaccd67b",
+        "latencyMs": 1421,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) was presented\n(B) by the research team\n(C) the new proposal\n(D) at the quarterly review\n\nSolution:\nC–A–B–D\n\nExplanation (if provided):\nThe correct order is: The new proposal was presented by the research team at the quarterly review.\n(C) is the subject, (A) is the passive verb, (B) is the agent phrase, (D) is the location phrase.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nAll five criteria are satisfied: (1) exactly 4 parts labelled A–D are presented; (2) the arrangement C–A–B–D forms one complete, grammatically correct sentence with proper subject-verb-agent-location structure; (3) the solution order is correct and produces a meaningful passive construction; (4) the arrangement is unique—alternative orders like C–A–D–B or A–C–B–D would be ungrammatical or illogical; and (5) all four parts are included in the solution.",
+          "tokenUsage": {
+            "total": 579,
+            "prompt": 455,
+            "completion": 124,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1421,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aab8d8aea60b0-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:55:59 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944158-jrTaGjhDvNNXOvURRlkD"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA Medium CO1 — proposal presented at quarterly review",
+          "vars": {
+            "bloom_level": "K3",
+            "difficulty": "Medium",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) was presented\n(B) by the research team\n(C) the new proposal\n(D) at the quarterly review\n",
+            "solution": "C–A–B–D",
+            "explanation": "The correct order is: The new proposal was presented by the research team at the quarterly review.\n(C) is the subject, (A) is the passive verb, (B) is the agent phrase, (D) is the location phrase.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct passive sentence in order C–A–B–D. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 1,
+        "vars": {
+          "bloom_level": "K3",
+          "difficulty": "Medium",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) was presented\n(B) by the research team\n(C) the new proposal\n(D) at the quarterly review\n",
+          "solution": "C–A–B–D",
+          "explanation": "The correct order is: The new proposal was presented by the research team at the quarterly review.\n(C) is the subject, (A) is the passive verb, (B) is the agent phrase, (D) is the location phrase.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aab8d8aea60b0-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:55:59 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944158-jrTaGjhDvNNXOvURRlkD"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 460,
+            "prompt": 364,
+            "completion": 96,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–D–A–B. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output explicitly states 'VALID' and provides detailed justification that the 4 parts (A–D) form exactly one grammatically correct sentence in the order C–D–A–B, which matches the rubric's requirement. The validator correctly identified this as a valid sentence arrangement question.",
+              "tokensUsed": {
+                "total": 460,
+                "prompt": 364,
+                "completion": 96,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nThe question satisfies all five criteria: it presents exactly 4 parts with proper labels (A–D); the solution C–D–A–B produces a single, complete, grammatically correct sentence (\\\"The teacher presented a comprehensive analysis of the grammar rules\\\"); the order is correct with proper subject-verb-object-prepositional phrase structure; this is the only logical arrangement that produces a grammatical sentence; and all parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–D–A–B. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "b7050cc1-9dfc-47be-b9c1-89a17aeb0ff6",
+        "latencyMs": 1448,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n\nSolution:\nC–D–A–B\n\nExplanation (if provided):\nThe correct order is: The teacher presented a comprehensive analysis of the grammar rules.\n(C) is the subject, (D) is the main verb, (A) is the object, (B) is the prepositional phrase.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nThe question satisfies all five criteria: it presents exactly 4 parts with proper labels (A–D); the solution C–D–A–B produces a single, complete, grammatically correct sentence (\"The teacher presented a comprehensive analysis of the grammar rules\"); the order is correct with proper subject-verb-object-prepositional phrase structure; this is the only logical arrangement that produces a grammatical sentence; and all parts are included in the solution.",
+          "tokenUsage": {
+            "total": 550,
+            "prompt": 450,
+            "completion": 100,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1448,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aab8d9afe6ec2-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:55:59 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944158-hC2W8km5VFDZIJGuf3Fo"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA Medium CO1 — teacher presents grammar analysis",
+          "vars": {
+            "bloom_level": "K3",
+            "difficulty": "Medium",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n",
+            "solution": "C–D–A–B",
+            "explanation": "The correct order is: The teacher presented a comprehensive analysis of the grammar rules.\n(C) is the subject, (D) is the main verb, (A) is the object, (B) is the prepositional phrase.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order C–D–A–B. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 2,
+        "vars": {
+          "bloom_level": "K3",
+          "difficulty": "Medium",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n",
+          "solution": "C–D–A–B",
+          "explanation": "The correct order is: The teacher presented a comprehensive analysis of the grammar rules.\n(C) is the subject, (D) is the main verb, (A) is the object, (B) is the prepositional phrase.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aab8d9afe6ec2-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:55:59 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944158-hC2W8km5VFDZIJGuf3Fo"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 453,
+            "prompt": 354,
+            "completion": 99,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order B–C–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output states 'VALID' and the validator correctly identified that the 4 parts (A-D) form exactly one grammatically correct sentence in the order B-C-D-A ('The students correctly identified the main verb in each sentence'). The output matches the required response according to the rubric.",
+              "tokensUsed": {
+                "total": 453,
+                "prompt": 354,
+                "completion": 99,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nThe question satisfies all five criteria: it presents exactly 4 parts with capital letter labels (A–D); the arrangement B–C–D–A produces one complete, grammatically correct sentence (\\\"The students correctly identified the main verb in each sentence\\\"); the solution order is correct and grammatically sound; this is the only logical arrangement that produces a valid sentence; and all parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order B–C–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "f508fb48-4fe1-40d3-b2a8-848fce8df7db",
+        "latencyMs": 2038,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) the main verb\n\nSolution:\nB–C–D–A\n\nExplanation (if provided):\nThe correct order is: The students correctly identified the main verb in each sentence.\n(B) is the subject, (C) is the verb phrase with adverb, (D) is the object, (A) is the prepositional phrase.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nThe question satisfies all five criteria: it presents exactly 4 parts with capital letter labels (A–D); the arrangement B–C–D–A produces one complete, grammatically correct sentence (\"The students correctly identified the main verb in each sentence\"); the solution order is correct and grammatically sound; this is the only logical arrangement that produces a valid sentence; and all parts are included in the solution.",
+          "tokenUsage": {
+            "total": 544,
+            "prompt": 454,
+            "completion": 90,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 2038,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aab8d8b5a97f6-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:00 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944158-evwPXFFdtom6K4kcu75d"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA Hard CO1 — students identified verb correctly",
+          "vars": {
+            "bloom_level": "K4",
+            "difficulty": "Hard",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) the main verb\n",
+            "solution": "B–C–D–A",
+            "explanation": "The correct order is: The students correctly identified the main verb in each sentence.\n(B) is the subject, (C) is the verb phrase with adverb, (D) is the object, (A) is the prepositional phrase.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This is a VALID Sentence Arrangement question. The 4 parts (A–D) form exactly one grammatically correct sentence in order B–C–D–A. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 3,
+        "vars": {
+          "bloom_level": "K4",
+          "difficulty": "Hard",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) the main verb\n",
+          "solution": "B–C–D–A",
+          "explanation": "The correct order is: The students correctly identified the main verb in each sentence.\n(B) is the subject, (C) is the verb phrase with adverb, (D) is the object, (A) is the prepositional phrase.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aab8d8b5a97f6-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:00 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944158-evwPXFFdtom6K4kcu75d"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 476,
+            "prompt": 360,
+            "completion": 116,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This is a VALID Sentence Arrangement question with 5 parts (A–E) forming exactly one grammatically correct sentence in order C–D–B–A–E. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output states 'VALID' and the validator correctly identified that the question has 5 parts (A-E), produces a single grammatically correct sentence in the order C-D-B-A-E, and meets all criteria for a valid sentence arrangement question. The rubric requires the validator to output 'VALID' and mark it as PASS, which is exactly what occurred.",
+              "tokensUsed": {
+                "total": 476,
+                "prompt": 360,
+                "completion": 116,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nThe question satisfies all five criteria: it presents exactly 5 labelled parts (A–E), the solution C–D–B–A–E produces a single complete and grammatically correct sentence (\\\"The engineer analyzed the data to improve system performance before submitting the report\\\"), the order is correct and logical, this arrangement is the only one that produces a grammatical and meaningful sentence, and all parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis is a VALID Sentence Arrangement question with 5 parts (A–E) forming exactly one grammatically correct sentence in order C–D–B–A–E. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "afa95898-85ce-46b7-a14d-820255706512",
+        "latencyMs": 1274,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) to improve system performance\n(B) the data\n(C) the engineer\n(D) analyzed\n(E) before submitting the report\n\nSolution:\nC–D–B–A–E\n\nExplanation (if provided):\nThe correct order is: The engineer analyzed the data to improve system performance before submitting the report.\n(C) is the subject, (D) is the main verb, (B) is the object, (A) is the infinitive phrase, (E) is the time clause.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nThe question satisfies all five criteria: it presents exactly 5 labelled parts (A–E), the solution C–D–B–A–E produces a single complete and grammatically correct sentence (\"The engineer analyzed the data to improve system performance before submitting the report\"), the order is correct and logical, this arrangement is the only one that produces a grammatical and meaningful sentence, and all parts are included in the solution.",
+          "tokenUsage": {
+            "total": 566,
+            "prompt": 471,
+            "completion": 95,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1274,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aaba48c6bcb6e-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:03 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944162-tNEeAUGMxWS8LRGOyq4C"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA Hard CO1 — five parts, engineer analyzed data scenario",
+          "vars": {
+            "bloom_level": "K4",
+            "difficulty": "Hard",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) to improve system performance\n(B) the data\n(C) the engineer\n(D) analyzed\n(E) before submitting the report\n",
+            "solution": "C–D–B–A–E",
+            "explanation": "The correct order is: The engineer analyzed the data to improve system performance before submitting the report.\n(C) is the subject, (D) is the main verb, (B) is the object, (A) is the infinitive phrase, (E) is the time clause.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This is a VALID Sentence Arrangement question with 5 parts (A–E) forming exactly one grammatically correct sentence in order C–D–B–A–E. The validator must output VALID. Mark PASS if the validator responded VALID. Mark FAIL if it responded INVALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 4,
+        "vars": {
+          "bloom_level": "K4",
+          "difficulty": "Hard",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) to improve system performance\n(B) the data\n(C) the engineer\n(D) analyzed\n(E) before submitting the report\n",
+          "solution": "C–D–B–A–E",
+          "explanation": "The correct order is: The engineer analyzed the data to improve system performance before submitting the report.\n(C) is the subject, (D) is the main verb, (B) is the object, (A) is the infinitive phrase, (E) is the time clause.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aaba48c6bcb6e-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:03 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944162-tNEeAUGMxWS8LRGOyq4C"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 448,
+            "prompt": 346,
+            "completion": 102,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This question has a deliberate flaw: the solution order A–D–C–B produces an ungrammatical, non-idiomatic sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output correctly identifies the flaw in the proposed arrangement A–D–C–B, recognizing that it produces an ungrammatical sentence with incorrect word order. The validator properly outputs 'INVALID' as required by the rubric, and provides clear explanation of why the arrangement is incorrect and what the correct arrangement should be.",
+              "tokensUsed": {
+                "total": 448,
+                "prompt": 346,
+                "completion": 102,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nINVALID\\n\\nThe proposed arrangement \\\"A–D–C–B\\\" produces an ungrammatical sentence with incorrect word order (\\\"At the end of each month to the directors the accountant submits financial reports\\\"), whereas the correct grammatical arrangement should be \\\"C–B–D–A\\\" (\\\"The accountant submits financial reports to the directors at the end of each month\\\"), making the solution incorrect.\\n</Output>\\n<Rubric>\\nThis question has a deliberate flaw: the solution order A–D–C–B produces an ungrammatical, non-idiomatic sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "ec6ec8ec-f9c9-44b2-8d1d-b21c1a9af146",
+        "latencyMs": 1563,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n\nSolution:\nA–D–C–B\n\nExplanation (if provided):\nThe correct order is: At the end of each month to the directors the accountant submits financial reports.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "INVALID\n\nThe proposed arrangement \"A–D–C–B\" produces an ungrammatical sentence with incorrect word order (\"At the end of each month to the directors the accountant submits financial reports\"), whereas the correct grammatical arrangement should be \"C–B–D–A\" (\"The accountant submits financial reports to the directors at the end of each month\"), making the solution incorrect.",
+          "tokenUsage": {
+            "total": 516,
+            "prompt": 429,
+            "completion": 87,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1563,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aaba8efe960b0-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:03 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944162-QSxO3PHMnYCBSkyqLZ1P"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA INVALID — wrong solution order produces ungrammatical sentence",
+          "vars": {
+            "bloom_level": "K2",
+            "difficulty": "Easy",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "error_type": "Incorrect solution order",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n",
+            "solution": "A–D–C–B",
+            "explanation": "The correct order is: At the end of each month to the directors the accountant submits financial reports.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This question has a deliberate flaw: the solution order A–D–C–B produces an ungrammatical, non-idiomatic sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 5,
+        "vars": {
+          "bloom_level": "K2",
+          "difficulty": "Easy",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "error_type": "Incorrect solution order",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) at the end of each month\n(B) submits financial reports\n(C) the accountant\n(D) to the directors\n",
+          "solution": "A–D–C–B",
+          "explanation": "The correct order is: At the end of each month to the directors the accountant submits financial reports.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aaba8efe960b0-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:03 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944162-QSxO3PHMnYCBSkyqLZ1P"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 400,
+            "prompt": 318,
+            "completion": 82,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This question has a deliberate flaw: the four parts are each independent clauses and cannot be joined into a single coherent sentence — they form four separate sentences. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output correctly identifies that the four parts are independent clauses that cannot be joined into a single coherent sentence and outputs 'INVALID' as required by the rubric. The validator properly recognized the deliberate flaw in the question.",
+              "tokensUsed": {
+                "total": 400,
+                "prompt": 318,
+                "completion": 82,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nINVALID\\n\\nThe solution produces four independent clauses joined without proper conjunctions or punctuation, resulting in a run-on sentence rather than a single grammatically correct sentence, and the explanation itself presents them as four separate sentences, contradicting the requirement for one complete sentence.\\n</Output>\\n<Rubric>\\nThis question has a deliberate flaw: the four parts are each independent clauses and cannot be joined into a single coherent sentence — they form four separate sentences. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "4d8233a0-8f16-4aac-8507-62afb23c2082",
+        "latencyMs": 986,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) the manager left the office\n(B) the meeting ended\n(C) everyone applauded\n(D) the team was happy\n\nSolution:\nB–A–D–C\n\nExplanation (if provided):\nThe correct order is: The meeting ended. The manager left the office. The team was happy. Everyone applauded.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "INVALID\n\nThe solution produces four independent clauses joined without proper conjunctions or punctuation, resulting in a run-on sentence rather than a single grammatically correct sentence, and the explanation itself presents them as four separate sentences, contradicting the requirement for one complete sentence.",
+          "tokenUsage": {
+            "total": 490,
+            "prompt": 432,
+            "completion": 58,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 986,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aaba98cbf6ec2-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:03 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944162-3Re8sFPINs6cEHtPKXxl"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA INVALID — parts form two independent clauses, not one sentence",
+          "vars": {
+            "bloom_level": "K3",
+            "difficulty": "Medium",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "error_type": "Two independent clauses instead of one sentence",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) the manager left the office\n(B) the meeting ended\n(C) everyone applauded\n(D) the team was happy\n",
+            "solution": "B–A–D–C",
+            "explanation": "The correct order is: The meeting ended. The manager left the office. The team was happy. Everyone applauded.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This question has a deliberate flaw: the four parts are each independent clauses and cannot be joined into a single coherent sentence — they form four separate sentences. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 6,
+        "vars": {
+          "bloom_level": "K3",
+          "difficulty": "Medium",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "error_type": "Two independent clauses instead of one sentence",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) the manager left the office\n(B) the meeting ended\n(C) everyone applauded\n(D) the team was happy\n",
+          "solution": "B–A–D–C",
+          "explanation": "The correct order is: The meeting ended. The manager left the office. The team was happy. Everyone applauded.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aaba98cbf6ec2-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:03 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944162-3Re8sFPINs6cEHtPKXxl"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "error": "The validator output 'VALID' but the rubric indicates the question has a deliberate flaw with two equally grammatical solutions: B–C–D–A ('She wrote the letter carefully') and B–A–C–D ('She carefully wrote the letter'). Since both orders are grammatically correct, the arrangement is ambiguous and should have been marked INVALID. The validator failed to identify this ambiguity.",
+        "gradingResult": {
+          "pass": false,
+          "score": 0,
+          "reason": "The validator output 'VALID' but the rubric indicates the question has a deliberate flaw with two equally grammatical solutions: B–C–D–A ('She wrote the letter carefully') and B–A–C–D ('She carefully wrote the letter'). Since both orders are grammatically correct, the arrangement is ambiguous and should have been marked INVALID. The validator failed to identify this ambiguity.",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 487,
+            "prompt": 365,
+            "completion": 122,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This question has a deliberate flaw: two orders are equally grammatical — B–C–D–A (She wrote the letter carefully) AND B–A–C–D (She carefully wrote the letter) are both correct English. The arrangement is ambiguous, so the validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+              },
+              "pass": false,
+              "score": 0,
+              "reason": "The validator output 'VALID' but the rubric indicates the question has a deliberate flaw with two equally grammatical solutions: B–C–D–A ('She wrote the letter carefully') and B–A–C–D ('She carefully wrote the letter'). Since both orders are grammatically correct, the arrangement is ambiguous and should have been marked INVALID. The validator failed to identify this ambiguity.",
+              "tokensUsed": {
+                "total": 487,
+                "prompt": 365,
+                "completion": 122,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nVALID\\n\\nThe question satisfies all five criteria: it presents exactly 4 parts with capital letter labels (A–D); the solution order B–C–D–A produces one complete, grammatically correct sentence (\\\"She wrote the letter carefully\\\"); the arrangement is correct; this is the only logical order that produces a grammatical sentence; and all parts are included in the solution.\\n</Output>\\n<Rubric>\\nThis question has a deliberate flaw: two orders are equally grammatical — B–C–D–A (She wrote the letter carefully) AND B–A–C–D (She carefully wrote the letter) are both correct English. The arrangement is ambiguous, so the validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "1a127189-6d27-4039-a9b6-668c73edb324",
+        "latencyMs": 1002,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) carefully\n(B) she\n(C) wrote\n(D) the letter\n\nSolution:\nB–C–D–A\n\nExplanation (if provided):\nThe correct order is: She wrote the letter carefully.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "VALID\n\nThe question satisfies all five criteria: it presents exactly 4 parts with capital letter labels (A–D); the solution order B–C–D–A produces one complete, grammatically correct sentence (\"She wrote the letter carefully\"); the arrangement is correct; this is the only logical order that produces a grammatical sentence; and all parts are included in the solution.",
+          "tokenUsage": {
+            "total": 489,
+            "prompt": 407,
+            "completion": 82,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1002,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aabaa4d0097f6-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:03 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944162-3b5j5VweOozUdYXCoDmf"
+              }
+            }
+          }
+        },
+        "score": 0,
+        "success": false,
+        "testCase": {
+          "description": "SA INVALID — ambiguous arrangement (two valid orders exist)",
+          "vars": {
+            "bloom_level": "K2",
+            "difficulty": "Easy",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "error_type": "Ambiguous — multiple valid orders",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) carefully\n(B) she\n(C) wrote\n(D) the letter\n",
+            "solution": "B–C–D–A",
+            "explanation": "The correct order is: She wrote the letter carefully.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This question has a deliberate flaw: two orders are equally grammatical — B–C–D–A (She wrote the letter carefully) AND B–A–C–D (She carefully wrote the letter) are both correct English. The arrangement is ambiguous, so the validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 7,
+        "vars": {
+          "bloom_level": "K2",
+          "difficulty": "Easy",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "error_type": "Ambiguous — multiple valid orders",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) carefully\n(B) she\n(C) wrote\n(D) the letter\n",
+          "solution": "B–C–D–A",
+          "explanation": "The correct order is: She wrote the letter carefully.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aabaa4d0097f6-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:03 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944162-3b5j5VweOozUdYXCoDmf"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 1
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 397,
+            "prompt": 307,
+            "completion": 90,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This question has a deliberate flaw: the solution order C–D–A omits part (B), meaning the solution is incomplete and does not use all given parts. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output correctly identifies that the solution is incomplete because part (B) is omitted, and appropriately marks it as INVALID. This matches the rubric's requirement that the validator should output INVALID when the solution order C–D–A omits part (B).",
+              "tokensUsed": {
+                "total": 397,
+                "prompt": 307,
+                "completion": 90,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nINVALID\\n\\nThe solution is incomplete as it fails to include part (B) \\\"of the grammar rules,\\\" which is a necessary component to form a complete and meaningful sentence, violating the Complete Coverage criterion.\\n</Output>\\n<Rubric>\\nThis question has a deliberate flaw: the solution order C–D–A omits part (B), meaning the solution is incomplete and does not use all given parts. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "5dffaedb-9cc3-4d8f-b502-62ffc6cdc838",
+        "latencyMs": 1139,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n\nSolution:\nC–D–A\n\nExplanation (if provided):\nThe correct order is: The teacher presented a comprehensive analysis.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "INVALID\n\nThe solution is incomplete as it fails to include part (B) \"of the grammar rules,\" which is a necessary component to form a complete and meaningful sentence, violating the Complete Coverage criterion.",
+          "tokenUsage": {
+            "total": 456,
+            "prompt": 411,
+            "completion": 45,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1139,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aabbe8e0460b0-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:07 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944166-ZyXtbhC0MkMxjdni3bDS"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA INVALID — solution is missing one part label",
+          "vars": {
+            "bloom_level": "K3",
+            "difficulty": "Medium",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "error_type": "Solution missing a part label",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n",
+            "solution": "C–D–A",
+            "explanation": "The correct order is: The teacher presented a comprehensive analysis.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This question has a deliberate flaw: the solution order C–D–A omits part (B), meaning the solution is incomplete and does not use all given parts. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 8,
+        "vars": {
+          "bloom_level": "K3",
+          "difficulty": "Medium",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "error_type": "Solution missing a part label",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) a comprehensive analysis\n(B) of the grammar rules\n(C) the teacher\n(D) presented\n",
+          "solution": "C–D–A",
+          "explanation": "The correct order is: The teacher presented a comprehensive analysis.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aabbe8e0460b0-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:07 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944166-ZyXtbhC0MkMxjdni3bDS"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      },
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "All assertions passed",
+          "namedScores": {},
+          "tokensUsed": {
+            "total": 428,
+            "prompt": 341,
+            "completion": 87,
+            "cached": 0,
+            "numRequests": 1
+          },
+          "componentResults": [
+            {
+              "assertion": {
+                "type": "llm-rubric",
+                "value": "This question has a deliberate flaw: part (D) reads \"a main verbs\" which is grammatically incorrect (article-noun disagreement). No arrangement can produce a grammatically correct sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+              },
+              "pass": true,
+              "score": 1,
+              "reason": "The output correctly identifies that the question has a deliberate flaw with 'a main verbs' (article-noun disagreement) and concludes that no arrangement can produce a grammatically correct sentence, therefore outputting INVALID as required by the rubric.",
+              "tokensUsed": {
+                "total": 428,
+                "prompt": 341,
+                "completion": 87,
+                "cached": 0,
+                "numRequests": 1,
+                "completionDetails": {
+                  "reasoning": 0,
+                  "acceptedPrediction": 0,
+                  "rejectedPrediction": 0
+                }
+              },
+              "metadata": {
+                "renderedGradingPrompt": "[{\"role\":\"system\",\"content\":\"You are grading output according to a user-specified rubric. If the statement in the rubric is true, then the output passes the test. You respond with a JSON object with this structure: {reason: string, pass: boolean, score: number}\\n\\nExamples:\\n\\n<Output>Hello world</Output>\\n<Rubric>Content contains a greeting</Rubric>\\n{\\\"reason\\\": \\\"the content contains the word 'Hello'\\\", \\\"pass\\\": true, \\\"score\\\": 1.0}\\n\\n<Output>Avast ye swabs, repel the invaders!</Output>\\n<Rubric>Does not speak like a pirate</Rubric>\\n{\\\"reason\\\": \\\"'avast ye' is a common pirate term\\\", \\\"pass\\\": false, \\\"score\\\": 0.0}\"},{\"role\":\"user\",\"content\":\"<Output>\\nINVALID\\n\\nThe question fails criterion 3 (CORRECT ORDER) because the proposed solution produces an ungrammatical sentence with a subject-verb agreement error: \\\"a main verbs\\\" is incorrect (should be either \\\"a main verb\\\" or \\\"main verbs\\\"), making the arrangement grammatically incorrect and therefore not a valid solution.\\n</Output>\\n<Rubric>\\nThis question has a deliberate flaw: part (D) reads \\\"a main verbs\\\" which is grammatically incorrect (article-noun disagreement). No arrangement can produce a grammatically correct sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\\n\\n</Rubric>\"}]"
+              }
+            }
+          ]
+        },
+        "id": "b7bd07c2-06f5-4341-bd64-61bcb3cb448d",
+        "latencyMs": 1779,
+        "namedScores": {},
+        "prompt": {
+          "raw": "You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\nInstruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) a main verbs\n\nSolution:\nB–C–D–A\n\nExplanation (if provided):\nThe correct order is: The students correctly identified a main verbs in each sentence.\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "label": "prompt.txt: You are a strict English grammar assessment validator. You will be given a Sentence Arrangement question, its solution, and its explanation. Your task is to evaluate whether the question is VALID or INVALID.\n\nA valid Sentence Arrangement question must satisfy ALL of the following criteria:\n\n1. PART LABELS: The question must present exactly 4–6 sentence parts, each labelled with a capital letter: (A), (B), (C), (D), and optionally (E) and (F).\n\n2. SINGLE SENTENCE: When arranged in the correct order given in the solution, the parts must form exactly ONE complete, grammatically correct English sentence — not a fragment, not two sentences, not a run-on.\n\n3. CORRECT ORDER: The solution must give the correct arrangement (e.g., \"C–A–D–B\"). The arrangement must actually produce a grammatically correct and meaningful sentence. An incorrect order that produces a non-sentence or an ungrammatical sentence is a flaw.\n\n4. UNIQUE ARRANGEMENT: The correct order given in the solution must be the ONLY logical arrangement. If another order also produces a valid grammatical sentence, the question is ambiguous and therefore INVALID.\n\n5. COMPLETE COVERAGE: The solution order must include ALL part labels present in the question. Missing any label means the solution is incomplete.\n\nQuestion:\n{{question}}\n\nSolution:\n{{solution}}\n\nExplanation (if provided):\n{{explanation}}\n\nEvaluate this question carefully against all five criteria above.\n\nRespond with VALID or INVALID on the first line, followed by a one-sentence justification explaining your verdict.",
+          "config": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          }
+        },
+        "promptId": "016e2c8d0ac22e1f4281b5035d97c37721c81917f4d38dfcba3af89eb19fa501",
+        "promptIdx": 0,
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "label": ""
+        },
+        "response": {
+          "output": "INVALID\n\nThe question fails criterion 3 (CORRECT ORDER) because the proposed solution produces an ungrammatical sentence with a subject-verb agreement error: \"a main verbs\" is incorrect (should be either \"a main verb\" or \"main verbs\"), making the arrangement grammatically incorrect and therefore not a valid solution.",
+          "tokenUsage": {
+            "total": 492,
+            "prompt": 419,
+            "completion": 73,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0
+            }
+          },
+          "cached": false,
+          "latencyMs": 1779,
+          "finishReason": "stop",
+          "guardrails": {
+            "flagged": false
+          },
+          "metadata": {
+            "http": {
+              "status": 200,
+              "statusText": "OK",
+              "headers": {
+                "access-control-allow-origin": "*",
+                "access-control-expose-headers": "X-Generation-Id,cf-ray",
+                "cf-ray": "a02aabc02ab6cb6e-BOM",
+                "connection": "keep-alive",
+                "content-encoding": "gzip",
+                "content-type": "application/json",
+                "date": "Thu, 28 May 2026 04:56:08 GMT",
+                "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+                "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+                "server": "cloudflare",
+                "transfer-encoding": "chunked",
+                "x-content-type-options": "nosniff",
+                "x-generation-id": "gen-1779944166-gH49yZ8aRpx9EhXm2FS0"
+              }
+            }
+          }
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "description": "SA INVALID — part contains a grammatical error making arrangement impossible",
+          "vars": {
+            "bloom_level": "K4",
+            "difficulty": "Hard",
+            "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+            "question_type": "Sentence Arrangement",
+            "error_type": "A part itself contains a grammatical error",
+            "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) a main verbs\n",
+            "solution": "B–C–D–A",
+            "explanation": "The correct order is: The students correctly identified a main verbs in each sentence.\n"
+          },
+          "assert": [
+            {
+              "type": "llm-rubric",
+              "value": "This question has a deliberate flaw: part (D) reads \"a main verbs\" which is grammatically incorrect (article-noun disagreement). No arrangement can produce a grammatically correct sentence. The validator must output INVALID. Mark PASS if the validator responded INVALID. Mark FAIL if it responded VALID.\n"
+            }
+          ],
+          "options": {
+            "provider": {
+              "id": "openai:anthropic/claude-haiku-4-5",
+              "config": {
+                "apiBaseUrl": "https://openrouter.ai/api/v1",
+                "temperature": 0
+              }
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 9,
+        "vars": {
+          "bloom_level": "K4",
+          "difficulty": "Hard",
+          "course_outcome": "CO1: Identify nouns and main verbs in sentence context.",
+          "question_type": "Sentence Arrangement",
+          "error_type": "A part itself contains a grammatical error",
+          "question": "Instruction: Arrange the following parts to form a single meaningful sentence.\n\n(A) in each sentence\n(B) the students\n(C) correctly identified\n(D) a main verbs\n",
+          "solution": "B–C–D–A",
+          "explanation": "The correct order is: The students correctly identified a main verbs in each sentence.\n"
+        },
+        "metadata": {
+          "http": {
+            "status": 200,
+            "statusText": "OK",
+            "headers": {
+              "access-control-allow-origin": "*",
+              "access-control-expose-headers": "X-Generation-Id,cf-ray",
+              "cf-ray": "a02aabc02ab6cb6e-BOM",
+              "connection": "keep-alive",
+              "content-encoding": "gzip",
+              "content-type": "application/json",
+              "date": "Thu, 28 May 2026 04:56:08 GMT",
+              "permissions-policy": "payment=(self \"https://checkout.stripe.com\" \"https://connect-js.stripe.com\" \"https://js.stripe.com\" \"https://*.js.stripe.com\" \"https://hooks.stripe.com\")",
+              "referrer-policy": "no-referrer, strict-origin-when-cross-origin",
+              "server": "cloudflare",
+              "transfer-encoding": "chunked",
+              "x-content-type-options": "nosniff",
+              "x-generation-id": "gen-1779944166-gH49yZ8aRpx9EhXm2FS0"
+            }
+          },
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 9,
+      "failures": 1,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 4391,
+        "completion": 846,
+        "cached": 0,
+        "total": 5237,
+        "numRequests": 10,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0
+        },
+        "assertions": {
+          "total": 4481,
+          "prompt": 3500,
+          "completion": 981,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0
+          }
+        }
+      },
+      "durationMs": 11986,
+      "evaluationDurationMs": 11986
+    }
+  },
+  "config": {
+    "description": "Eval — Sentence Arrangement",
+    "prompts": [
+      "file://prompt.txt"
+    ],
+    "providers": [
+      {
+        "id": "openai:anthropic/claude-haiku-4-5",
+        "config": {
+          "apiBaseUrl": "https://openrouter.ai/api/v1",
+          "temperature": 0
+        }
+      }
+    ],
+    "tests": [
+      "file://eval_tests.yaml",
+      "file://testing_tests.yaml"
+    ],
+    "defaultTest": {
+      "options": {
+        "provider": {
+          "id": "openai:anthropic/claude-haiku-4-5",
+          "config": {
+            "apiBaseUrl": "https://openrouter.ai/api/v1",
+            "temperature": 0
+          }
+        }
+      }
+    },
+    "outputPath": [
+      "results.json"
+    ],
+    "extensions": []
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.3",
+    "nodeVersion": "v25.8.2",
+    "platform": "win32",
+    "arch": "x64",
+    "exportedAt": "2026-05-28T04:56:10.936Z",
+    "evaluationCreatedAt": "2026-05-28T04:55:58.190Z"
+  }
+}
