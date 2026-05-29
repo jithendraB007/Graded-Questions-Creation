@@ -1096,9 +1096,36 @@ def delete_question(question_id: str):
 @app.get("/health")
 def health():
     api_key = os.environ.get("OPENROUTER_API_KEY", "")
+
+    # DB diagnostics
+    db_info = {
+        "db_available": DB_AVAILABLE,
+        "embedding_available": EMBEDDING_AVAILABLE,
+        "db_host": os.getenv("DB_HOST", "NOT SET"),
+        "db_port": os.getenv("DB_PORT", "NOT SET"),
+        "db_name": os.getenv("DB_NAME", "NOT SET"),
+        "db_user": os.getenv("DB_USER", "NOT SET"),
+        "db_password_set": bool(os.getenv("DB_PASSWORD")),
+    }
+
+    # Test live connection
+    if DB_AVAILABLE:
+        try:
+            from database.config import get_connection, release_connection
+            conn = get_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM questions")
+            db_info["questions_count"] = cur.fetchone()[0]
+            db_info["connection"] = "ok"
+            cur.close()
+            release_connection(conn)
+        except Exception as e:
+            db_info["connection"] = f"error: {str(e)}"
+
     return {
         "status": "ok",
         "api_key_configured": bool(api_key and not api_key.startswith("sk-or-paste")),
+        "db": db_info,
     }
 
 
