@@ -37,7 +37,10 @@ if _env_file.exists():
             _k, _v = _line.split("=", 1)
             os.environ.setdefault(_k.strip(), _v.strip())
 
-from generate_questions import build_prompt, load_samples, FOLDER_MAP, compute_bloom_targets
+from generate_questions import build_prompt, load_samples, FOLDER_MAP, compute_bloom_targets, DB_AVAILABLE, _get_embedding_model
+
+if DB_AVAILABLE:
+    from database.queries import insert_question_to_db, check_exact_duplicate_in_db, check_similarity_in_db
 from backend.integrations.sheets import sheets_client
 
 COURSES_DIR = ROOT / "courses"
@@ -316,6 +319,31 @@ def _build_excel(questions: list[DownloadQuestion], meta: dict) -> bytes:
     return buf.getvalue()
 
 
+# ── DB schema auto-migration on startup ──────────────────────────────────────
+
+def _run_schema_if_needed():
+    """Creates tables and indexes on first deploy. Safe to run repeatedly."""
+    if not DB_AVAILABLE:
+        return
+    try:
+        from database.config import get_connection, release_connection
+        schema_file = Path(__file__).parent.parent / "database" / "schema.sql"
+        if not schema_file.exists():
+            return
+        sql = schema_file.read_text(encoding="utf-8")
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute(sql)
+        conn.commit()
+        cur.close()
+        release_connection(conn)
+        print("[DB] Schema applied successfully.")
+    except Exception as e:
+        print(f"[DB] Schema migration skipped: {e}")
+
+_run_schema_if_needed()
+
+
 # ── FastAPI app ───────────────────────────────────────────────────────────────
 
 app = FastAPI(title="GA Question Generator API", version="1.0")
@@ -368,6 +396,51 @@ def get_structure():
             "modules": modules,
         })
     return {"courses": result}
+
+
+import uuid as _uuid
+
+def _save_to_db(questions: list, req, meta: dict) -> int:
+    """
+    Saves accepted questions to PostgreSQL with embeddings.
+    Returns count of questions actually inserted.
+    Fails silently — DB issues never block generation.
+    """
+    if not DB_AVAILABLE:
+        return 0
+    saved = 0
+    try:
+        model = _get_embedding_model()
+        for q in questions:
+            text = q.question.strip()
+            if not text:
+                continue
+            # Skip if already in DB (cross-session dedup)
+            if check_exact_duplicate_in_db(text, req.question_type):
+                continue
+            embedding = model.encode([text])[0]
+            if check_similarity_in_db(embedding, req.question_type, 0.85):
+                continue
+            record = {
+                "question_id":   str(_uuid.uuid4()),
+                "question_type": req.question_type,
+                "question_text": text,
+                "correct_answer": q.solution,
+                "explanation":   q.explanation,
+                "difficulty":    req.difficulty,
+                "domain":        meta.get("topic_display") or meta.get("topic", ""),
+                "instructions":  None,
+                "options":       None,
+                "correct_answer_position": None,
+                "question_purpose": None,
+                "tags":          None,
+                "schema_type":   None,
+            }
+            insert_question_to_db(record, embedding)
+            saved += 1
+    except Exception as e:
+        print(f"[DB SAVE WARNING] {e}")
+    return saved
 
 
 @app.post("/api/generate", response_model=GenerateResponse)
@@ -472,6 +545,10 @@ def generate(req: GenerateRequest):
         "course_outcome": req.course_outcome,
         "material_file": mat.name,
     }
+
+    # Save accepted questions to DB for future cross-session dedup
+    _save_to_db(questions, req, meta)
+
     return GenerateResponse(questions=questions, raw=raw, meta=meta, filtered_count=filtered_count)
 
 
@@ -670,6 +747,9 @@ def generate_module(req: GenerateModuleRequest):
         }
         for q in unique:
             all_questions.append({**q.model_dump(), **meta})
+
+        # Save to DB for future cross-session dedup
+        _save_to_db(unique, req, meta)
 
         topic_results.append({
             "topic": topic,
@@ -920,6 +1000,97 @@ async def import_csv(file: UploadFile = File(...), status: str = "approved"):
 
     result = sheets_client.log_questions(items)
     return {"logged": result.get("logged", len(items)), "total": len(items)}
+
+
+@app.get("/api/question-bank")
+def get_question_bank(
+    question_type: str = None,
+    difficulty: str = None,
+    search: str = None,
+    limit: int = 200,
+    offset: int = 0,
+):
+    """Fetch questions stored in PostgreSQL for the Question Bank UI."""
+    if not DB_AVAILABLE:
+        return {"questions": [], "total": 0, "db_available": False}
+    try:
+        from database.config import get_connection, release_connection
+        conn = get_connection()
+        cur = conn.cursor()
+
+        where, params = [], []
+        if question_type:
+            where.append("question_type = %s"); params.append(question_type)
+        if difficulty:
+            where.append("difficulty = %s"); params.append(difficulty)
+        if search:
+            where.append("question_text ILIKE %s"); params.append(f"%{search}%")
+
+        clause = ("WHERE " + " AND ".join(where)) if where else ""
+
+        cur.execute(f"SELECT COUNT(*) FROM questions {clause}", params)
+        total = cur.fetchone()[0]
+
+        cur.execute(
+            f"""SELECT question_id, question_type, question_text, correct_answer,
+                       explanation, difficulty, domain, created_at
+                FROM questions {clause}
+                ORDER BY created_at DESC
+                LIMIT %s OFFSET %s""",
+            params + [limit, offset],
+        )
+        cols = [d[0] for d in cur.description]
+        questions = []
+        for row in cur.fetchall():
+            r = dict(zip(cols, row))
+            r["created_at"] = r["created_at"].isoformat() if r["created_at"] else ""
+            questions.append(r)
+
+        # Summary counts by type
+        cur.execute(
+            "SELECT question_type, COUNT(*) FROM questions GROUP BY question_type ORDER BY COUNT(*) DESC"
+        )
+        by_type = {r[0]: r[1] for r in cur.fetchall()}
+
+        cur.execute(
+            "SELECT difficulty, COUNT(*) FROM questions GROUP BY difficulty ORDER BY COUNT(*) DESC"
+        )
+        by_difficulty = {r[0]: r[1] for r in cur.fetchall()}
+
+        cur.close()
+        release_connection(conn)
+        return {
+            "questions": questions,
+            "total": total,
+            "by_type": by_type,
+            "by_difficulty": by_difficulty,
+            "db_available": True,
+        }
+    except Exception as e:
+        return {"questions": [], "total": 0, "db_available": False, "error": str(e)}
+
+
+@app.delete("/api/question-bank/{question_id}")
+def delete_question(question_id: str):
+    """Delete a question from PostgreSQL."""
+    if not DB_AVAILABLE:
+        raise HTTPException(503, "Database not available")
+    try:
+        from database.config import get_connection, release_connection
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute("DELETE FROM questions WHERE question_id = %s RETURNING id", (question_id,))
+        deleted = cur.fetchone()
+        conn.commit()
+        cur.close()
+        release_connection(conn)
+        if not deleted:
+            raise HTTPException(404, "Question not found")
+        return {"deleted": question_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 
 @app.get("/health")

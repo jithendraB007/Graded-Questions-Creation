@@ -41,12 +41,20 @@ try:
         insert_question_to_db,
     )
     from database.sheets_sync import sync_question_to_sheets
-    # Load once at module level — downloads 80MB model on first run
-    EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
     DB_AVAILABLE = True
 except Exception:
-    EMBEDDING_MODEL = None
     DB_AVAILABLE = False
+
+# Lazy singleton — loaded on first use, not at import time
+_EMBEDDING_MODEL = None
+
+def _get_embedding_model():
+    global _EMBEDDING_MODEL
+    if _EMBEDDING_MODEL is None:
+        from sentence_transformers import SentenceTransformer
+        print("Loading embedding model (first use)...")
+        _EMBEDDING_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    return _EMBEDDING_MODEL
 
 ROOT = Path(__file__).parent
 EVALS_DIR = ROOT / "evals"
@@ -558,7 +566,7 @@ def generate_questions_in_chunks(
                 continue
 
             # Gate 2: compute embedding
-            candidate_embedding = EMBEDDING_MODEL.encode([question_text])[0]
+            candidate_embedding = _get_embedding_model().encode([question_text])[0]
 
             # Gate 3: semantic similarity against DB via pgvector
             similar_in_db = check_similarity_in_db(

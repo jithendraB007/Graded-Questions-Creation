@@ -12,13 +12,22 @@ export async function fetchHealth() {
   return res.json()
 }
 
+async function parseJsonSafe(res, fallback = 'Request failed') {
+  try {
+    return await res.json()
+  } catch {
+    const text = await res.text().catch(() => '')
+    throw new Error(text.trim() || `${fallback} (HTTP ${res.status})`)
+  }
+}
+
 export async function generateQuestions(payload) {
   const res = await fetch(`${BASE}/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Generation failed')
   if (!res.ok) throw new Error(data.detail || 'Generation failed')
   return data
 }
@@ -52,7 +61,7 @@ export async function generateModule(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Module generation failed')
   if (!res.ok) throw new Error(data.detail || 'Module generation failed')
   return data
 }
@@ -63,14 +72,14 @@ export async function submitFeedback(items) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(items),
   })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Feedback submission failed')
   if (!res.ok) throw new Error(data.detail || 'Feedback submission failed')
   return data
 }
 
 export async function optimizePrompts() {
   const res = await fetch(`${BASE}/optimize`, { method: 'POST' })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Optimization failed')
   if (!res.ok) throw new Error(data.detail || 'Optimization failed')
   return data
 }
@@ -83,7 +92,7 @@ export async function sheetsStatus() {
 
 export async function sheetsAuth() {
   const res = await fetch(`${BASE}/sheets/auth`, { method: 'POST' })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Auth failed')
   if (!res.ok) throw new Error(data.detail || 'Auth failed')
   return data
 }
@@ -94,7 +103,7 @@ export async function sheetsLog(questions) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ questions }),
   })
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Log failed')
   if (!res.ok) throw new Error(data.detail || 'Log failed')
   return data
 }
@@ -117,9 +126,25 @@ export function sheetsAutoLog(questions) {
 
 export async function sheetsDashboard() {
   const res = await fetch(`${BASE}/sheets/dashboard`)
-  const data = await res.json()
+  const data = await parseJsonSafe(res, 'Dashboard fetch failed')
   if (!res.ok) throw new Error(data.detail || 'Dashboard fetch failed')
   return data
+}
+
+export async function fetchQuestionBank({ questionType, difficulty, search, limit = 200, offset = 0 } = {}) {
+  const params = new URLSearchParams()
+  if (questionType) params.set('question_type', questionType)
+  if (difficulty)   params.set('difficulty', difficulty)
+  if (search)       params.set('search', search)
+  params.set('limit', limit)
+  params.set('offset', offset)
+  const res = await fetch(`${BASE}/question-bank?${params}`)
+  return parseJsonSafe(res, 'Failed to load question bank')
+}
+
+export async function deleteFromQuestionBank(questionId) {
+  const res = await fetch(`${BASE}/question-bank/${questionId}`, { method: 'DELETE' })
+  return parseJsonSafe(res, 'Failed to delete question')
 }
 
 export async function downloadExcel(questions, meta) {

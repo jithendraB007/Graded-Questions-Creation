@@ -3,6 +3,7 @@ import PoolBuilder from './components/PoolBuilder.jsx'
 import SamplesPanel from './components/SamplesPanel.jsx'
 import SyllabusPanel from './components/SyllabusPanel.jsx'
 import Dashboard from './components/Dashboard.jsx'
+import QuestionBank from './components/QuestionBank.jsx'
 import { fetchStructure, fetchHealth, downloadExcel, fetchSyllabus } from './api/client.js'
 
 // Marks per question type — used as badge in UI and passed to generation prompt
@@ -97,9 +98,10 @@ export default function App() {
   const [dlError,       setDlError]       = useState('')
   const [driveUrl,      setDriveUrl]      = useState('')
   const [driveErr,      setDriveErr]      = useState('')
-  const [showSamples,   setShowSamples]   = useState(false)
-  const [showSyllabus,  setShowSyllabus]  = useState(false)
-  const [showDashboard, setShowDashboard] = useState(false)
+  const [showSamples,      setShowSamples]      = useState(false)
+  const [showSyllabus,     setShowSyllabus]     = useState(false)
+  const [showDashboard,    setShowDashboard]    = useState(false)
+  const [showQuestionBank, setShowQuestionBank] = useState(false)
 
   async function loadData() {
     setLoading(true)
@@ -199,6 +201,10 @@ export default function App() {
           <button onClick={() => setShowDashboard(true)}
             className="text-xs font-semibold text-gray-500 hover:text-emerald-700 border border-gray-200 hover:border-emerald-300 bg-white px-3 py-1.5 rounded-lg transition-colors">
             📊 Dashboard
+          </button>
+          <button onClick={() => setShowQuestionBank(true)}
+            className="text-xs font-semibold text-gray-500 hover:text-indigo-700 border border-gray-200 hover:border-indigo-300 bg-white px-3 py-1.5 rounded-lg transition-colors">
+            🗄️ Question Bank
           </button>
           <button onClick={() => setShowSyllabus(true)}
             className="text-xs font-semibold text-gray-500 hover:text-violet-700 border border-gray-200 hover:border-violet-300 bg-white px-3 py-1.5 rounded-lg transition-colors">
@@ -363,6 +369,9 @@ export default function App() {
       {showDashboard && (
         <Dashboard pool={pool} co={co} onClose={() => setShowDashboard(false)} />
       )}
+
+      {/* ── Question Bank panel ─────────────────────────────────────────────── */}
+      {showQuestionBank && <QuestionBank onClose={() => setShowQuestionBank(false)} />}
 
       {/* ── Samples modal ───────────────────────────────────────────────────── */}
       {showSamples && <SamplesPanel onClose={() => setShowSamples(false)} />}
