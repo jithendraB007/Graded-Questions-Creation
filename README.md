@@ -1,17 +1,134 @@
 # GA Question Generator
 
-An AI-powered tool that generates English assessment questions from reading material, supporting four courses across Foundation, Advanced, Applied, and Language Analytics levels. The tool produces questions aligned to Bloom's Taxonomy levels and Course Outcomes, with a full review workflow and Google Sheets tracking.
+An AI-powered English assessment question generation system built for four courses across Foundation, Advanced, Applied, and Language Analytics levels. Questions are grounded in reading material, aligned to Bloom's Taxonomy and Course Outcomes, deduplicated using semantic embeddings, and tracked via Google Sheets and a PostgreSQL question bank.
 
 ---
 
-## What This Tool Does
+## Tech Stack
 
-1. Select a **Course → Module → Topic** and **Question Type** from the top bar.
-2. Set difficulty and question count per level — Bloom's K-levels are automatically distributed based on the Course Outcome.
-3. Generate questions using Claude (via OpenRouter) grounded in the topic's reading material and sample reference questions.
-4. **Review each question** — approve it or reject it with a feedback note.
-5. **Download as Excel** — approved questions in the main sheet, rejected/reviewed questions in a separate Feedback sheet.
-6. **Log to Google Sheets** — track all generated questions across sessions in a live dashboard with charts.
+### Backend
+| Technology | Purpose |
+|---|---|
+| **Python 3.10+** | Core language |
+| **FastAPI** | REST API framework |
+| **Uvicorn** | ASGI server |
+| **OpenAI SDK** | LLM API client (routed via OpenRouter) |
+| **Claude (Anthropic)** | LLM for question generation via OpenRouter |
+| **OpenRouter** | LLM routing — model-agnostic API gateway |
+| **PostgreSQL 16** | Question bank database |
+| **pgvector** | Vector similarity extension for PostgreSQL |
+| **psycopg2** | PostgreSQL driver for Python |
+| **sentence-transformers** | Semantic embeddings (all-MiniLM-L6-v2, 384-dim) |
+| **scikit-learn** | Cosine similarity for session-level dedup |
+| **Google Sheets API** | Question logging and dashboard |
+| **Google Drive API** | Excel export to Drive |
+| **gspread** | Google Sheets Python client |
+| **openpyxl** | Excel (.xlsx) file generation |
+| **PyYAML** | Reading eval/sample YAML files |
+| **Pydantic** | Request/response validation |
+
+### Frontend
+| Technology | Purpose |
+|---|---|
+| **React 18** | UI framework |
+| **Vite** | Build tool and dev server |
+| **Tailwind CSS** | Utility-first styling |
+| **Recharts** | Dashboard charts |
+
+### Infrastructure
+| Technology | Purpose |
+|---|---|
+| **Docker** | Local PostgreSQL + pgvector container |
+| **Render** | Cloud deployment (web service + managed PostgreSQL) |
+| **GitHub** | Source control and Render deploy trigger |
+| **Promptfoo** | LLM evaluation framework for question quality checks |
+
+---
+
+## Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    React Frontend                        │
+│  PoolBuilder · Dashboard · QuestionBank · SamplesPanel  │
+└────────────────────┬────────────────────────────────────┘
+                     │ HTTP (fetch)
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│                 FastAPI Backend                          │
+│                 api_server.py                           │
+│                                                         │
+│  /api/generate ──► build_prompt() ──► OpenRouter LLM   │
+│                         │                               │
+│                    Parse questions                      │
+│                         │                               │
+│              ┌──────────▼──────────┐                   │
+│              │  Dedup Pipeline     │                   │
+│              │  1. Jaccard (batch) │                   │
+│              │  2. Exact DB check  │                   │
+│              │  3. pgvector sim.   │                   │
+│              │  4. Session sim.    │                   │
+│              └──────────┬──────────┘                   │
+│                         │                               │
+│            ┌────────────▼────────────┐                 │
+│            │   PostgreSQL + pgvector │                 │
+│            │   (question bank + dedup│                 │
+│            └────────────┬────────────┘                 │
+│                         │                               │
+│            ┌────────────▼────────────┐                 │
+│            │   Google Sheets API     │                 │
+│            │   (logging + dashboard) │                 │
+│            └─────────────────────────┘                 │
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Key Features
+
+### Question Generation
+- Generates questions grounded in topic reading material (Markdown files)
+- Supports **20 question types** across Grammar & Vocabulary, Reading, and Writing
+- Bloom's K-level (K1–K6) auto-distributed per question based on Course Outcome
+- Per-difficulty generation: Easy / Medium / Hard
+- Module-level batch generation (all topics in one pass)
+
+### Anti-Duplicate Pipeline (4-Gate Deduplication)
+Every generated question passes through four gates before being accepted:
+1. **Exact match** — fast text hash check against database
+2. **Semantic embedding** — `all-MiniLM-L6-v2` (384-dimensional vectors) stored in pgvector
+3. **pgvector similarity** — cosine similarity query against all stored questions (threshold: 0.85)
+4. **Session similarity** — cosine similarity against questions generated in the current session
+
+A diversity log (connectors used, domains covered, sentence starters, answer positions) is injected into every LLM prompt to prevent pattern repetition.
+
+### Question Bank
+- Full-screen panel showing all questions stored in PostgreSQL
+- Filter by question type and difficulty
+- Full-text search
+- Expandable cards showing question, solution, and explanation
+- Delete individual questions from the database
+
+### Review Workflow
+- Approve / Reject each question with optional feedback notes
+- Filter pool by All / Pending / Approved / Rejected
+- DSPy-style prompt optimisation using approved questions as few-shot examples
+
+### Google Sheets Dashboard
+- Live question log with timestamp, CO, bloom level, status, and feedback
+- Dashboard tab with quality metrics: Approval Rate, Rejection Rate, Review Coverage
+- Charts: by difficulty, by Bloom level, by question type, questions over time
+
+### Excel Export
+- Download approved questions as `.xlsx`
+- Sheet 1: Generated Questions with full metadata
+- Sheet 2: Feedback log for rejected/reviewed questions
+- Automatic upload to Google Drive
+
+### Quality Evals (Promptfoo)
+- Automated evaluation of question quality for 5 question types
+- Positive tests (valid questions) + negative tests (intentionally flawed questions)
+- LLM-as-judge rubric evaluation via OpenRouter
 
 ---
 
@@ -21,266 +138,196 @@ An AI-powered tool that generates English assessment questions from reading mate
 |---|---|---|
 | Python | 3.10 or 3.11 | https://www.python.org/downloads/ |
 | Node.js | 18 LTS or newer | https://nodejs.org/ |
-
-> During Python installation, tick **"Add Python to PATH"**.
-
-Verify in PowerShell:
-```powershell
-python --version   # Python 3.10.x or 3.11.x
-node --version     # v18.x or newer
-npm --version
-```
+| Docker Desktop | Latest | https://www.docker.com/products/docker-desktop/ |
+| Git | Latest | https://git-scm.com/ |
 
 ---
 
-## First-Time Setup
+## Local Setup
 
-Open **PowerShell** and run the following steps in order.
-
-### Step 1 — Navigate to the project folder
+### Step 1 — Clone the repository
 ```powershell
-cd D:\GA
+git clone https://github.com/jithendraB007/Graded-Questions-Creation.git
+cd Graded-Questions-Creation
 ```
 
-### Step 2 — Create a Python virtual environment
+### Step 2 — Create Python virtual environment
 ```powershell
 py -3.10 -m venv backend\venv
-```
-
-### Step 3 — Activate the virtual environment
-```powershell
 backend\venv\Scripts\Activate.ps1
 ```
 
-You will see `(venv)` at the start of the prompt. If you get an error about scripts being disabled:
+If you get a scripts error:
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
-Then try Step 3 again.
 
-### Step 4 — Install Python packages
+### Step 3 — Install Python packages
 ```powershell
-pip install -r backend\requirements.txt
+pip install -r requirements.txt
 ```
-This takes 2–5 minutes. Wait until it finishes.
 
-### Step 5 — Install frontend packages
+### Step 4 — Install frontend packages
 ```powershell
-cd D:\GA\frontend
+cd frontend
 npm install
-cd D:\GA
+cd ..
 ```
 
-### Step 6 — Set your OpenRouter API key
+### Step 5 — Configure environment variables
 
-Open `D:\GA\.env` in Notepad and set:
+Copy `.env.example` to `.env` (or edit `.env` directly):
 ```
-OPENROUTER_API_KEY=sk-or-v1-...your-key-here...
+OPENROUTER_API_KEY=sk-or-v1-...your-key...
+
+# PostgreSQL (Docker)
+DB_HOST=localhost
+DB_PORT=5433
+DB_NAME=questions_db
+DB_USER=postgres
+DB_PASSWORD=gapassword
+
+# Google Sheets
+GOOGLE_SPREADSHEET_ID=your-sheet-id
+GOOGLE_TOKEN={"token": "..."}
 ```
 
-Get a key at https://openrouter.ai — create an account, add credits, and copy the API key.
+Get an OpenRouter API key at https://openrouter.ai
 
-> The `.env` file is private. Never share it or commit it to version control.
+> `.env` is gitignored. Never commit it.
 
----
-
-## Running the App
-
-The app requires **two terminals** open at the same time.
-
-### Terminal 1 — Backend (FastAPI)
+### Step 6 — Start the PostgreSQL + pgvector database (Docker)
 
 ```powershell
-cd D:\GA
+docker run -d `
+  --name graded-questions-generation `
+  --restart unless-stopped `
+  -e POSTGRES_PASSWORD=gapassword `
+  -e POSTGRES_DB=questions_db `
+  -e POSTGRES_USER=postgres `
+  -p 5433:5432 `
+  -v graded_questions_data:/var/lib/postgresql/data `
+  pgvector/pgvector:pg16
+```
+
+The schema is applied automatically on first backend startup.
+
+### Step 7 — Run the app
+
+**Terminal 1 — Backend:**
+```powershell
 backend\venv\Scripts\python.exe -m uvicorn backend.api_server:app --reload --port 8000
 ```
 
-Leave this running. You should see:
-```
-INFO:     Uvicorn running on http://127.0.0.1:8000
-```
-
-### Terminal 2 — Frontend (React + Vite)
-
+**Terminal 2 — Frontend:**
 ```powershell
-cd D:\GA\frontend
+cd frontend
 npm run dev
 ```
 
-Open your browser and go to:
-```
-http://localhost:5173
+Open: http://localhost:5173
+
+---
+
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `OPENROUTER_API_KEY` | ✅ Yes | OpenRouter API key for LLM access |
+| `DB_HOST` | ✅ Yes | PostgreSQL host (localhost for local) |
+| `DB_PORT` | ✅ Yes | PostgreSQL port (5433 for local Docker) |
+| `DB_NAME` | ✅ Yes | Database name (`questions_db`) |
+| `DB_USER` | ✅ Yes | Database user (`postgres`) |
+| `DB_PASSWORD` | ✅ Yes | Database password |
+| `GOOGLE_SPREADSHEET_ID` | Optional | Google Sheets ID for dashboard |
+| `GOOGLE_TOKEN` | Optional | OAuth token JSON (single line) |
+| `GOOGLE_CLIENT_SECRET` | Optional | OAuth client secret JSON (single line) |
+| `SIMILARITY_THRESHOLD` | Optional | Dedup threshold, default `0.85` |
+
+---
+
+## Deployment on Render
+
+### Step 1 — Push to GitHub
+```bash
+git push origin main
 ```
 
-Press **Ctrl + C** in either terminal to stop it.
+### Step 2 — Create Blueprint on Render
+1. Go to https://render.com → **New** → **Blueprint**
+2. Connect your GitHub repository
+3. Render reads `render.yaml` and creates:
+   - **Web service**: `ga-question-generator` (Python + Node build)
+   - **PostgreSQL database**: `graded-questions-db` (free tier, pgvector included)
+
+### Step 3 — Add secret environment variables
+In the Render dashboard → web service → **Environment** tab, add:
+
+| Key | Value |
+|---|---|
+| `OPENROUTER_API_KEY` | Your `sk-or-v1-...` key |
+| `GOOGLE_SPREADSHEET_ID` | Your spreadsheet ID |
+| `GOOGLE_TOKEN` | Full token JSON as a single line |
+| `GOOGLE_CLIENT_SECRET` | Full client secret JSON as a single line |
+
+DB connection variables (`DB_HOST`, `DB_PORT`, etc.) are automatically injected from the managed database — no manual entry needed.
+
+### Step 4 — Deploy
+Click **Deploy**. Render will:
+1. Install Python + Node.js dependencies
+2. Build the React frontend
+3. Connect to the managed PostgreSQL database
+4. Run the schema migration automatically on startup
+5. Serve the app on a `*.onrender.com` URL
+
+### Notes
+- The database schema (`CREATE TABLE questions`, `CREATE EXTENSION vector`) runs automatically on every deploy — it is idempotent and safe to run repeatedly.
+- The `sentence-transformers` model (`all-MiniLM-L6-v2`) is downloaded on first use and cached. Render's **Starter plan ($7/month)** is recommended for production use due to the 512MB RAM requirement.
+- Local Docker DB and Render DB are completely separate — data does not sync between them.
 
 ---
 
 ## Using the App
 
-### Selection Bar (top of page)
-
+### Selection Bar
 | Field | Description |
 |---|---|
 | **Course** | Foundation / Advanced / Applied / Language Analytics |
 | **Module / Unit** | Module within the selected course |
-| **Topic** | Specific topic — a ⚠ icon means no reading material is loaded yet |
-| **Question Type** | See the full list below |
-| **CO badge** | Auto-derived from the module number, or loaded from an uploaded syllabus |
+| **Topics** | Optional filter — leave empty to use all topics with material |
+| **Question Types** | Multi-select — generate multiple types in one session |
+| **CO badge** | Auto-derived from module number, or loaded from uploaded syllabus |
 
-### Question Types
+### Question Types Supported
 
+**Grammar & Vocabulary**
 Fill in the Blanks · Cloze · Error Correction · Sentence Arrangement · Jumbled Sentences · Jumbled Words · Sentence Conversion · Sentence Correction / MCQ
 
-### Generating Questions
+**Reading Comprehension**
+Higher-order Comprehension · Literal & Inferential Comprehension · Choice-based Comprehension
 
-Once a module and question type are selected, the **Generation Panel** appears with three difficulty sections: Easy, Medium, and Hard.
+**Writing**
+Short Functional Writing · Essay Writing · Story Writing · Process Writing · Email Writing · Notice Writing · Report Writing · Paragraph Writing
 
-- Set the number of questions per difficulty level.
-- Click **Generate** on any difficulty row to generate for that level.
-- Use **Generate for Module** (when a module has multiple topics) to generate questions for every topic in one pass — all results appear in the same pool.
+### Review Workflow
+1. Generate questions at any difficulty level
+2. Each question shows: question text, solution, explanation, Bloom level, difficulty
+3. **Approve** or **Reject** (with optional feedback note) each question
+4. Filter the pool: All / Pending / Approved / Rejected
+5. Click **⚡ Optimize** to submit feedback and improve future generations
+6. Click **Download Excel** to export approved questions
 
-Bloom's K-levels (K1–K6) are distributed automatically per question based on the CO number:
-- Lower COs (CO1, CO2) emphasise K1–K3 (Remember, Understand, Apply)
-- Higher COs (CO4, CO5) emphasise K4–K6 (Analyse, Evaluate, Create)
+### Question Bank (🗄️ button)
+- Browse all questions ever generated and saved to the database
+- Filter by type and difficulty, or search by keyword
+- Expandable cards show full question, solution, and explanation
+- Delete questions from the database permanently
 
-### Pool — Review Workflow
-
-All generated questions appear in a scrollable pool. Each question shows:
-- Question text, solution, and explanation
-- Bloom level (K1–K6), difficulty badge, and topic label (for module-level generations)
-
-**Actions per question:**
-- **Approve** — mark the question as accepted
-- **Reject** — mark as rejected and optionally type a feedback note
-- Filter the pool by All / Pending / Approved / Rejected using the tab bar at the top
-
-Questions persist in the pool when you switch topics within the same module. The pool resets when you change module or course.
-
-### Optimizer
-
-After reviewing questions, the **⚡ Optimize** button (shown when there are reviewed questions) submits feedback to the backend and adds approved questions as few-shot examples for future generations.
-
-### Download Excel
-
-Click **Download Excel (N)** in the top bar (N = count of non-rejected questions).
-
-The downloaded `.xlsx` file has two sheets:
-
-**Sheet 1 — Generated Questions**
-| Column | Description |
-|---|---|
-| Q No. | Question number |
-| Module No. | Module number extracted from the module ID |
-| Bloom Level | K1–K6 per question |
-| Difficulty | Easy / Medium / Hard |
-| Course Outcome | CO associated with this generation |
-| Module Name | Full module display name |
-| Topic | Topic name |
-| Question | Full question text |
-| Solution | Correct answer |
-| Explanation | Grammatical / contextual explanation |
-
-**Sheet 2 — Feedback** *(only if questions were rejected or reviewed with notes)*
-| Column | Description |
-|---|---|
-| Q No. | Question number |
-| Module Name | Module |
-| Topic | Topic |
-| Difficulty | Easy / Medium / Hard |
-| Bloom Level | K1–K6 |
-| Question | Full question text |
-| Solution | Correct answer |
-| Status | rejected / approved |
-| Feedback Note | Reviewer's comment |
-
-Rows are colour-coded: light red for rejected, light green for approved-with-feedback.
-
----
-
-## Syllabus Upload
-
-Upload a course syllabus (PDF, DOCX, or TXT) to enable CO descriptions, unit names, and recommended question types per topic.
-
-1. Click **Upload Syllabus** in the top bar.
-2. Select the course and upload the file.
-3. The LLM extracts the structure — units, CO definitions, topic names, and recommended question types.
-4. Once uploaded, the CO badge in the selection bar shows the full CO description, and the Syllabus button changes to **✓ Syllabus**.
-
-Syllabus files are stored under `D:\GA\syllabi\<course_id>.json`.
-
----
-
-## Google Sheets Dashboard
-
-The dashboard logs all generated questions to a Google Sheets spreadsheet and shows live progress charts.
-
-### First-time Google Sheets setup
-
-1. Click **📊 Dashboard** in the top bar.
-2. Click **Sign in with Google** — a browser window opens for OAuth authorisation.
-3. Sign in with your Google account. The app is in "Testing" mode, so only authorised test users can sign in.
-4. After authorisation, the dashboard shows charts and a link to the spreadsheet.
-
-> The `credentials/client_secret.json` file must be present in `D:\GA\credentials\`. This file is already set up for the project — do not delete it.
-
-### Logging questions
-
-Click **Log Pool to Sheets** in the dashboard header. All non-rejected questions from the current pool are appended to the Google Sheets "Questions Log" sheet, and the dashboard stats refresh automatically.
-
-### Dashboard charts
-
-| Chart | Type | Description |
-|---|---|---|
-| Review Status | Donut chart | Approved / Pending / Rejected breakdown |
-| By Difficulty | Bar chart | Easy / Medium / Hard counts |
-| Bloom Distribution | Horizontal bar chart | K1–K6 counts with colour gradient |
-| Questions Over Time | Line chart | Questions generated per day (shown when data spans 2+ dates) |
-| By Question Type | Horizontal bar chart | Count per question type |
-| Module Progress | Table | Topics covered and question count per module |
-| By Course | Horizontal bar chart | Count per course (shown when multiple courses are present) |
-
-The Google Sheets file has three sheets:
-- **Questions Log** — every logged question with timestamp, CO, status, and feedback
-- **Feedback Log** — questions with reviewer feedback
-- **Dashboard** — aggregate stats refreshed on every log
-
----
-
-## Sample Questions
-
-Click **Sample Questions** in the top bar to view the reference examples loaded for each question type. These are used as few-shot examples during generation.
-
-### Uploading new sample questions
-
-In the Sample Questions panel, select a question type and upload a CSV file with these columns:
-
-```
-Question, Solution, Explanation, Bloom's Level, Difficulty, CO
-```
-
-Uploaded samples are appended to `D:\GA\evals\<type>\eval_tests.yaml`.
-
----
-
-## Adding Reading Material
-
-Reading material is what the AI uses to generate questions. Each topic has a `material/` subfolder.
-
-### To add or update material for a topic
-
-Navigate to:
-```
-D:\GA\courses\<course>\<module>\<topic>\material\
-```
-For example:
-```
-D:\GA\courses\foundation\module_1\topic_1\material\
-```
-
-Place a `.md` file containing the reading text in that folder. The topic will automatically show as available (no ⚠ icon) the next time the app loads the structure.
-
-> The more content in the material file, the more varied and grounded the generated questions will be.
+### Dashboard (📊 button)
+- **Approve All Pending** — bulk approve all pending questions
+- **Import CSV** — import question CSV files into the log
+- Quality metrics: Approval Rate, Rejection Rate, Review Coverage
+- Charts by difficulty, Bloom level, question type, and time
 
 ---
 
@@ -289,129 +336,90 @@ Place a `.md` file containing the reading text in that folder. The topic will au
 ```
 D:\GA\
 │
-├── .env                          ← API keys (never commit this)
-├── generate_questions.py         ← Core prompt builder + Bloom distribution logic
+├── .env                          ← API keys and DB credentials (never commit)
+├── generate_questions.py         ← CLI tool + chunked dedup pipeline
+├── render.yaml                   ← Render deployment config
+├── requirements.txt              ← Python dependencies
 ├── README.md                     ← This file
+│
+├── database\
+│   ├── config.py                 ← PostgreSQL connection pool (psycopg2)
+│   ├── schema.sql                ← Table definitions + pgvector indexes
+│   ├── queries.py                ← DB read/write functions
+│   └── sheets_sync.py            ← Google Sheets export layer
 │
 ├── backend\
 │   ├── api_server.py             ← FastAPI app (all API endpoints)
-│   ├── requirements.txt          ← Python dependencies
-│   ├── venv\                     ← Python virtual environment
 │   └── integrations\
-│       └── sheets.py             ← Google Sheets client (OAuth + logging + stats)
+│       └── sheets.py             ← Google Sheets OAuth client + logging
 │
 ├── frontend\
 │   ├── src\
 │   │   ├── App.jsx               ← Main layout, selection bar, pool state
 │   │   ├── components\
 │   │   │   ├── PoolBuilder.jsx   ← Generation panel + review workflow
-│   │   │   ├── Dashboard.jsx     ← Google Sheets dashboard with recharts
+│   │   │   ├── Dashboard.jsx     ← Google Sheets dashboard with Recharts
+│   │   │   ├── QuestionBank.jsx  ← PostgreSQL question bank browser
 │   │   │   ├── SamplesPanel.jsx  ← Sample questions viewer + uploader
 │   │   │   └── SyllabusPanel.jsx ← Syllabus upload modal
 │   │   └── api\
 │   │       └── client.js         ← All fetch calls to the backend
-│   ├── package.json
 │   └── vite.config.js            ← Proxies /api → port 8000
 │
 ├── courses\
-│   ├── foundation\
-│   │   └── module_1\
-│   │       └── topic_1\
-│   │           ├── material\     ← .md reading material files
-│   │           └── metadata.json ← topic_name, module, course, skills
+│   ├── foundation\               ← Module → Topic → material/ + metadata.json
 │   ├── advanced\
 │   ├── applied\
 │   └── language_analytics\
 │
-├── credentials\
-│   ├── client_secret.json        ← Google OAuth credentials (DO NOT commit)
-│   └── token.json                ← OAuth token (auto-created after sign-in)
+├── evals\                        ← Promptfoo quality evaluation configs
+│   ├── cloze\
+│   ├── fill_in_the_blanks\
+│   ├── error_correction\
+│   ├── sentence_arrangement\
+│   └── jumbled_words\
 │
-├── syllabi\                      ← Uploaded and parsed syllabus JSON files
+├── credentials\                  ← Google OAuth credentials (DO NOT commit)
+│   ├── client_secret.json
+│   └── token.json
 │
-├── feedback\
-│   ├── feedback.jsonl            ← Reviewer feedback from the current session
-│   └── feedback_archived.jsonl   ← Feedback archived after optimisation
-│
-└── evals\
-    ├── cloze\
-    │   └── eval_tests.yaml       ← Few-shot examples for Cloze
-    ├── fill_in_the_blanks\
-    ├── error_correction\
-    ├── sentence_arrangement\
-    └── (one folder per question type)
+├── syllabi\                      ← Parsed syllabus JSON files
+└── feedback\                     ← Reviewer feedback for DSPy optimisation
 ```
 
 ---
 
-## Running Quality Checks (Evals)
+## Running Quality Checks (Promptfoo Evals)
 
-Quality checks test whether generated questions meet the defined standard using **Promptfoo** and the **Nx** task runner.
+Quality checks evaluate whether generated questions meet the defined standard using an LLM-as-judge approach.
 
 ```powershell
-# Check a specific question type
-npx nx run cloze:eval
-npx nx run fill-in-the-blanks:eval
-npx nx run error-correction:eval
+# Set OpenRouter key as OPENAI_API_KEY (Promptfoo uses openai: provider)
+$env:OPENAI_API_KEY = (Get-Content .env | Select-String "OPENROUTER_API_KEY").ToString().Split("=")[1]
 
-# Run all checks at once
-npx nx run-many --target=eval --all
+# Run eval for a specific question type
+cd evals\cloze
+promptfoo eval --no-cache
 
-# View results in the browser
-npx nx run cloze:view
+cd evals\fill_in_the_blanks
+promptfoo eval --no-cache
 ```
 
-You can also run evals from the **Nx Console** extension in VS Code:
-1. Install the **Nx Console** extension (`Ctrl+Shift+X` → search "Nx Console")
-2. Click the Nx icon in the left sidebar
-3. Find the question type and click **eval**
+**Current pass rates:**
 
-> Quality checks use the OpenRouter API and consume credits.
+| Question Type | Tests | Pass Rate |
+|---|---|---|
+| Fill in the Blanks | 21 | 95% |
+| Jumbled Words | 20 | 95% |
+| Error Correction | 10 | 90% |
+| Sentence Arrangement | 10 | 90% |
+| Cloze | 10 | 80% |
 
----
-
-## Troubleshooting
-
-### "API key not set in .env" warning (amber badge in top bar)
-Open `D:\GA\.env` and make sure it contains:
-```
-OPENROUTER_API_KEY=sk-or-v1-...
-```
-Restart the backend after saving.
-
-### "Credit balance too low" error
-Top up at https://openrouter.ai/credits
-
-### "Backend not running" message in the app
-Start Terminal 1 (the uvicorn command) and wait for it to print `Uvicorn running on http://127.0.0.1:8000`.
-
-### "No reading material for this topic" (⚠ icon on topic)
-Add a `.md` file to `D:\GA\courses\<course>\<module>\<topic>\material\` and refresh the page.
-
-### Google Sheets — "Error 403: access_denied"
-The app is in Testing mode. Add your Google account email as an authorised test user in Google Cloud Console → APIs & Services → OAuth consent screen → Test users.
-
-### Google Sheets — no data saved after logging
-Make sure the Google Sheets API is enabled in your project: Google Cloud Console → APIs & Services → Library → search "Google Sheets API" → Enable. Then sign out and sign in again from the Dashboard.
-
-### Frontend blank page or "cannot find module"
-```powershell
-cd D:\GA\frontend
-npm install
-npm run dev
-```
-
-### Python package errors during setup
-Confirm you are using Python 3.10 or 3.11:
-```powershell
-python --version
-```
-If needed, re-create the virtual environment:
-```powershell
-py -3.10 -m venv backend\venv
-backend\venv\Scripts\Activate.ps1
-pip install -r backend\requirements.txt
-```
+Each eval folder contains:
+- `prompt.txt` — validator prompt (LLM judges question quality)
+- `eval_tests.yaml` — positive test cases (valid questions)
+- `testing_tests.yaml` — negative test cases (deliberately flawed questions)
+- `promptfooconfig.yaml` — provider config (Claude Haiku via OpenRouter)
 
 ---
 
@@ -420,10 +428,42 @@ pip install -r backend\requirements.txt
 | Task | Command |
 |---|---|
 | Start backend | `backend\venv\Scripts\python.exe -m uvicorn backend.api_server:app --reload --port 8000` |
-| Start frontend | `cd D:\GA\frontend && npm run dev` |
-| Open app | `http://localhost:5173` |
-| Activate venv | `backend\venv\Scripts\Activate.ps1` |
-| Install Python packages | `pip install -r backend\requirements.txt` |
-| Install frontend packages | `cd D:\GA\frontend && npm install` |
-| Run quality check | `npx nx run cloze:eval` |
-| Run all quality checks | `npx nx run-many --target=eval --all` |
+| Start frontend | `cd frontend && npm run dev` |
+| Open app | http://localhost:5173 |
+| Start DB container | `docker start graded-questions-generation` |
+| Check DB questions | `docker exec graded-questions-generation psql -U postgres -d questions_db -c "SELECT COUNT(*) FROM questions;"` |
+| Run CLI generator | `backend\venv\Scripts\python.exe generate_questions.py --material <path> --type "Fill in the Blanks" --count 10` |
+| Run quality eval | `cd evals\cloze && promptfoo eval --no-cache` |
+
+---
+
+## Troubleshooting
+
+### "API key not set in .env" (amber badge)
+Open `.env`, set `OPENROUTER_API_KEY=sk-or-v1-...`, restart the backend.
+
+### "Credit balance too low"
+Top up at https://openrouter.ai/credits
+
+### Backend not starting / Question Bank shows "Database not connected"
+Start Docker Desktop, then:
+```powershell
+docker start graded-questions-generation
+```
+
+### Google Sheets — "Error 403: access_denied"
+Add your Google account as a test user in Google Cloud Console → OAuth consent screen → Test users.
+
+### Frontend blank page
+```powershell
+cd frontend && npm install && npm run dev
+```
+
+### Memory error on Render (sentence-transformers)
+Upgrade to Render Starter plan ($7/month) for dedicated 512MB RAM. The `all-MiniLM-L6-v2` embedding model requires ~450MB at runtime.
+
+### Questions not saving to DB
+Verify Docker container is running:
+```powershell
+docker ps --filter name=graded-questions-generation
+```
